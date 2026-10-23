@@ -3,17 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Climate Awareness Demo</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>Home - Climate Change Awareness App</title>
+    <link rel="stylesheet" href="../CSS/index_style.css">
 </head>
 <body>
 
     <header>
-        <h1>Awareness Demo</h1>
+        <h1>Climate Change Awareness App</h1>
         <nav>
             <ul>
+                <li><a href="index.html">Home</a></li>
                 <li><a href="about.html">About</a></li>
-                <li><a href="#news">Climate News</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="News.html">Climate News</a></li>
                 <li><a href="#guides">Guides & Solutions</a></li>
                 <li><a href="#benefits">Environmental Benefits</a></li>
             </ul>
@@ -21,38 +23,31 @@
     </header>
 
     <main>
-        <section id="about">
-            <h2>Welcome to the Climate Change Awareness App</h2>
-            <p>Understanding and addressing climate change is crucial for our planet's future. This app aims to provide information, tools, and resources to help you learn about climate change, its impacts, and what you can do.</p>
+        <section id="hero-content">
+            <h2>Protecting Our Planet for Future Generations</h2>
+            <p>Welcome to the central hub for climate awareness. Here, we provide you with the tools and information needed to understand our changing world and take actionable steps toward a sustainable future.</p>
+            <!-- React component will be rendered here -->
+            <div id="root"></div>
         </section>
 
         <section id="features">
             <h2>Our Features</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
             <ul>
-                <li><a href="#">Climate Data Tracker</a></li>
-                <li><a href="#">Interactive Educational Modules</a></li>
-                <li><a href="#">News & Updates</a></li>
-                <li><a href="#">Water Purification Guides</a></li>
-                <li><a href="#">Environmental Benefits Explained</a></li>
-                </ul>
-        </section>
-
-        <section id="news">
-            <h2>Latest Climate News</h2>
-            <p>Stay updated with the latest news and developments related to climate change. (News feed will be integrated here later.)</p>
-            <!--  Example placeholders for news API -->
-            <div class="news-feed">
-                <!-- News items will be dynamically added here -->
-            </div>
+                <li>Climate Data Tracker: Real-time monitoring of environmental changes.</li>
+                <li>Interactive Educational Modules: Learn about ecology and conservation.</li>
+                <li>News & Updates: Stay informed with global climate news.</li>
+                <li>Water Purification Guides: Practical solutions for water scarcity.</li>
+                <li>Environmental Benefits Explained: Understand the impact of a healthy ecosystem.</li>
+            </ul>
         </section>
 
         <section id="guides">
-            <h2>Useful Guides & Solutions</h3>
-            <ul>
-                <li><a href="#">How to Purify Water in Impoverished Areas</a></li>
-                <li><a href="#">Reduce Metal Pollution: A Guide for Communities</a></li>
-                <li><a href="#">Benefits of a Clean Environment for Your Community</a></li>
-            </ul>
+            <h2>Useful Guides & Solutions</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris. Vivamus hendrerit arcu sed erat molestie vehicula.</p>
+            <!-- React components will be rendered here -->
+            <div id="news-section"></div>
+            <div id="guides-section"></div>
         </section>
 
         <section id="benefits">
@@ -65,7 +60,6 @@
                 <li>Economic opportunities through sustainable practices and green industries.</li>
             </ul>
         </section>
-
     </main>
 
     <footer>
@@ -77,5 +71,12 @@
         </div>
     </footer>
 
+    <!-- Load React and the Carousel component -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Render the Carousel, NewsSection, and GuidesSection components -->
+    <script type="text/babel" src="../JS/index_app/main.js"></script>
 </body>
 </html>
