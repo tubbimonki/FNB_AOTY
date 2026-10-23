@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Climate News - Climate Change Awareness App</title>
+    <link rel="stylesheet" href="../CSS/style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Climate Change Awareness App</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="News.html">Climate News</a></li>
+                <li><a href="#guides">Guides & Solutions</a></li>
+                <li><a href="#benefits">Environmental Benefits</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="news-header">
+            <h2>Latest Climate News</h2>
+            <p>Stay updated with the latest news and developments related to climate change from around the globe.</p>
+            <!-- React component will be rendered here -->
+            <div id="news-root"></div>
+        </section>
+
+        <section id="extra-content">
+            <h2>Additional Resources</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+            <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+        </section>
+
+        <section id="guides-summary">
+            <h2>Quick Guides</h2>
+            <div id="guides-section"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Climate Awareness App. All rights reserved.</p>
+        <div class="nonprofit-ad">
+            <!-- Example Non-Profit Advertisements -->
+            <img src="placeholder_nonprofit_logo.png" alt="Non-profit Logo" width="100">
+            <p>Support organizations working on climate solutions:</p>
+        </div>
+    </footer>
+
+    <!-- Load React and the Carousel component -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Render the NewsSection component -->
+    <script type="text/babel">
+        // React rendering logic for news page
+        const newsRoot = ReactDOM.createRoot(document.getElementById('news-root'));
+        newsRoot.render(
+            <React.StrictMode>
+                {/* <NewsSection /> */}
+                <div style={{padding: '20px', border: '1px solid #ccc'}}>News Feed Component Placeholder</div>
+            </React.StrictMode>
+        );
+
+        const guidesRoot = ReactDOM.createRoot(document.getElementById('guides-section'));
+        guidesRoot.render(
+            <React.StrictMode>
+                {/* <GuidesSection /> */}
+                <div style={{padding: '20px', border: '1px solid #ccc'}}>Guides Section Placeholder</div>
+            </React.StrictMode>
+        );
+    </script>
+</body>
+</html>
