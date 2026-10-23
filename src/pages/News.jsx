@@ -2,19 +2,19 @@ import React from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
-const News = ({ onNavigate }) => {
+const News = () => {
   const navigation = [
-    { label: 'Home', link: '#' },
-    { label: 'About', link: '#' },
-    { label: 'Features', link: '#features' },
-    { label: 'Climate News', link: '#' },
-    { label: 'Guides & Solutions', link: '#guides' },
-    { label: 'Environmental Benefits', link: '#benefits' },
+    { label: 'Home', link: 'home' },
+    { label: 'About', link: 'about' },
+    { label: 'Features', link: 'features' },
+    { label: 'Climate News', link: 'news' },
+    { label: 'Guides & Solutions', link: 'guides' },
+    { label: 'Environmental Benefits', link: 'benefits' },
   ];
 
   return (
     <>
-      <Header navigation={navigation} onNavigate={onNavigate} />
+      <Header navigation={navigation} />
 
       <main>
         <section id="news-header">
@@ -34,6 +34,7 @@ const News = ({ onNavigate }) => {
           <h2>Quick Guides</h2>
           <div id="guides-section" style={{padding: '20px', border: '1px solid #ccc'}}>Guides Section Placeholder</div>
         </section>
+
       </main>
 
       <Footer />

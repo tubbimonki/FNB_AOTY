@@ -1,26 +1,23 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Home from './pages/Home';
 import About from './pages/About';
 import News from './pages/News';
+import Features from './pages/Features';
+import Guides from './pages/Guides';
+import Benefits from './pages/Benefits';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('home');
-
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'about':
-        return <About onNavigate={setCurrentPage} />;
-      case 'news':
-        return <News onNavigate={setCurrentPage} />;
-      default:
-        return <Home onNavigate={setCurrentPage} />;
-    }
-  };
-
   return (
-    <div id="root">
-      {renderPage()}
-    </div>
+    <Routes>
+      <Route path="/" element={<Navigate replace to="/home" />} />
+      <Route path="/home" element={<Home />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/news" element={<News />} />
+      <Route path="/features" element={<Features />} />
+      <Route path="/guides" element={<Guides />} />
+      <Route path="/benefits" element={<Benefits />} />
+    </Routes>
   );
 }
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Header = ({ navigation, onNavigate }) => {
   return (
@@ -8,17 +9,7 @@ const Header = ({ navigation, onNavigate }) => {
         <ul>
           {navigation.map((item, index) => (
             <li key={index}>
-              <a 
-                href={item.link} 
-                onClick={(e) => {
-                  if (item.link !== '#features' && item.link !== '#guides' && item.link !== '#benefits') {
-                    e.preventDefault();
-                    onNavigate(item.label.toLowerCase());
-                  }
-                }}
-              >
-                {item.label}
-              </a>
+              <Link to={'/' + item.link}>{item.label}</Link>
             </li>
           ))}
         </ul>
