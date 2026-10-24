@@ -22,4 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-src/html/
+
+
+
+# Secrets
+.env
+coverage

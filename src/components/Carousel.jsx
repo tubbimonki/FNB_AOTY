@@ -1,39 +1,20 @@
 import React, { useState, useEffect } from 'react';
 
-const Carousel = ({ images }) => {
+// Shows one image at a time and moves to the next every 6 seconds.
+// Clicking a dot jumps to that image.
+const Carousel = ({ images = [] }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
 
-    // Function to update the current index and reset the interval
-    const goToSlide = (index) => {
-        setCurrentIndex(index);
-        resetInterval();
-    };
-
-    // Reset the auto-sliding interval
-    const resetInterval = () => {
-        clearInterval(intervalRef.current);
-        startInterval();
-    };
-
-    // Start the auto-sliding interval
-    const startInterval = () => {
-        intervalRef.current = setInterval(() => {
-            goToNextSlide();
-        }, 6000);
-    };
-
-    // Go to the next slide
-    const goToNextSlide = () => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-    };
-
+    // Re-runs whenever currentIndex changes, so clicking a dot restarts the timer.
     useEffect(() => {
-        startInterval();
-        return () => clearInterval(intervalRef.current);
-    }, []);
+        if (images.length < 2) return;
+        const timer = setTimeout(() => {
+            setCurrentIndex((currentIndex + 1) % images.length);
+        }, 6000);
+        return () => clearTimeout(timer);
+    }, [currentIndex, images.length]);
 
-    // Store the interval reference to reset it later
-    const intervalRef = React.useRef(null);
+    if (images.length === 0) return null;
 
     return (
         <div className="carousel">
@@ -43,7 +24,7 @@ const Carousel = ({ images }) => {
                     <div
                         key={index}
                         className={`carousel-indicator ${index === currentIndex ? 'active' : ''}`}
-                        onClick={() => goToSlide(index)}
+                        onClick={() => setCurrentIndex(index)}
                     >
                     </div>
                 ))}

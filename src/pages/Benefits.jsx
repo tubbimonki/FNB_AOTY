@@ -1,21 +1,8 @@
 import React from 'react';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 
 const Benefits = () => {
-  const navigation = [
-    { label: 'Home', link: 'home' },
-    { label: 'About', link: 'about' },
-    { label: 'Features', link: 'features' },
-    { label: 'Climate News', link: 'news' },
-    { label: 'Guides & Solutions', link: 'guides' },
-    { label: 'Environmental Benefits', link: 'benefits' },
-  ];
-
   return (
     <>
-      <Header navigation={navigation} />
-
       <main>
         <section id="benefits">
           <h2>Communal Benefits of a Healthy Environment</h2>
@@ -31,10 +18,7 @@ const Benefits = () => {
             By embracing sustainable practices, communities can safeguard natural resources for future generations while simultaneously enhancing quality of life today. The ripple effects—from reduced healthcare costs to new green job opportunities—demonstrate that environmental health is a foundational pillar of societal resilience.
           </p>
         </section>
-
       </main>
-
-      <Footer />
     </>
   );
 };

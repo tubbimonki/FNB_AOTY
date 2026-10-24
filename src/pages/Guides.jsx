@@ -1,21 +1,8 @@
 import React from 'react';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 
 const Guides = () => {
-  const navigation = [
-    { label: 'Home', link: 'home' },
-    { label: 'About', link: 'about' },
-    { label: 'Features', link: 'features' },
-    { label: 'Climate News', link: 'news' },
-    { label: 'Guides & Solutions', link: 'guides' },
-    { label: 'Environmental Benefits', link: 'benefits' },
-  ];
-
   return (
     <>
-      <Header navigation={navigation} />
-
       <main>
         <section id="guides">
 
@@ -32,10 +19,7 @@ const Guides = () => {
             These guides combine science-backed strategies with actionable steps, ensuring that every community member can contribute to a healthier environment. Whether you’re a policymaker, educator, or everyday citizen, our resources are designed to inspire informed action.
           </p>
         </section>
-
       </main>
-
-      <Footer />
     </>
   );
 };
