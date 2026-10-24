@@ -1,35 +1,35 @@
-// ─────────────────────────────────────────────────────────────────────────
-// YOUR TURN: task 1 in the auth notes doc.
-//
-// Middleware is a function (req, res, next) that runs before a route.
-// It either ends the request (res.status(...).json(...)) or calls next()
-// to hand over to the route. This one is the bouncer for every members-only
-// API route, e.g. router.get('/me', requireAuth({ db, jwtSecret }), handler).
-//
-// It must:
-//   1. Read the token from the cookie.   cookie-parser puts cookies on
-//      req.cookies; the name is COOKIE_NAME from ../auth/tokens.js.
-//   2. No token?             → 401 { error: 'Not logged in' }
-//   3. Verify it with verifyToken(token, jwtSecret). It THROWS when the
-//      token is expired, tampered with or signed with another secret,
-//      so wrap it in try/catch. Throws? → 401 { error: '...' }
-//   4. payload.sub is the user id as a STRING. Look the user up with
-//      findUserById(db, ...) from ../users.js. Gone (deleted account)? → 401
-//   5. Put the safe version on the request: req.user = toPublicUser(row)
-//      then call next().
-//
-// Why look the user up at all when the token is already trusted? Think
-// about a deleted account, and about task 4 (token_version).
-//
-// Tests: api/auth.test.js, the describe block 'task 1: requireAuth'.
-// Remove `.skip` from it, then `npm run test:watch` until it's green.
-// Until this is done, GET /api/auth/me answers 501, so refreshing the page
-// logs you out. That's the bug this task fixes. (The lint warnings about
-// unused db / jwtSecret / next below go away once you use them.)
-// ─────────────────────────────────────────────────────────────────────────
+import { COOKIE_NAME, verifyToken } from '../auth/tokens.js';
+import { findUserById, toPublicUser } from '../users.js';
 
+// Guards members-only API routes:
+//   router.get('/me', requireAuth({ db, jwtSecret }), handler)
+//
+// requireAuth(...) is a factory: it runs once when routes are set up and
+// returns the real middleware, which runs on every request. A middleware
+// either ends the request (return res.status(...)) or calls next() to hand
+// over to the route. When it hands over, req.user is { id, email, name }.
 export function requireAuth({ db, jwtSecret }) {
   return (req, res, next) => {
-    res.status(501).json({ error: 'requireAuth is not written yet (task 1)' });
+    // cookie-parser (app.js) has already parsed the Cookie header.
+    const token = req.cookies?.[COOKIE_NAME];
+    if (!token) return res.status(401).json({ error: 'Not logged in' });
+
+    // verifyToken throws for an expired, edited or forged token. Only that
+    // one call goes in the try, so errors from the route later on aren't
+    // mistaken for a bad token.
+    let payload;
+    try {
+      payload = verifyToken(token, jwtSecret);
+    } catch {
+      return res.status(401).json({ error: 'Session expired, please log in again' });
+    }
+
+    // The signature proves we issued the token, not that the account still
+    // exists. A deleted user's token must stop working too.
+    const user = findUserById(db, Number(payload.sub)); // sub is a string in JWTs
+    if (!user) return res.status(401).json({ error: 'Not logged in' });
+
+    req.user = toPublicUser(user); // never the row itself: it holds password_hash
+    next();
   };
 }

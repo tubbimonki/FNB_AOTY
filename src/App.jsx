@@ -2,9 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import About from './pages/About';
-import News from './pages/News';
 import Features from './pages/Features';
-import Guides from './pages/Guides';
 import Benefits from './pages/Benefits';
 import NotFound from './pages/NotFound';
 import TrackerPage from './features/green-wallet/TrackerPage';
@@ -22,9 +20,10 @@ function App() {
         <Route path="/" element={<Navigate replace to="/home" />} />
         <Route path="/home" element={<Home />} />
         <Route path="/about" element={<About />} />
-        <Route path="/news" element={<News />} />
         <Route path="/features" element={<Features />} />
-        <Route path="/guides" element={<Guides />} />
+        {/* News and guides now live on the dashboard. Old links still work. */}
+        <Route path="/news" element={<Navigate replace to="/dashboard?view=news" />} />
+        <Route path="/guides" element={<Navigate replace to="/dashboard?view=guides" />} />
         <Route path="/benefits" element={<Benefits />} />
         <Route path="/tracker" element={<TrackerPage />} />
         <Route

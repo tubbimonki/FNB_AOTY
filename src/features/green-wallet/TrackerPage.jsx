@@ -1,17 +1,13 @@
 import { useState } from 'react';
 import { actions, findAction } from './actions';
 import { useLogs } from './useLogs';
-import { calculateTotals } from './totals';
-
-// Today's local date as "YYYY-MM-DD", the format an <input type="date"> uses.
-// (toISOString would give the UTC date, which is yesterday before 02:00 in SA.)
-const today = () => new Date().toLocaleDateString('en-CA');
+import { today, calculateTodayTotals } from './totals';
 
 const TrackerPage = () => {
   // Each log only stores the action's id and the date; we look up the CO2 and
   // rand when we need them. useLogs keeps them in localStorage.
   const { logs, addLog, removeLog } = useLogs();
-  const todayTotals = calculateTotals(logs.filter((log) => log.date === today()));
+  const todayTotals = calculateTodayTotals(logs);
 
   // The form's current values. These are "controlled inputs": React state is
   // the source of truth, and each input shows the state and updates it on change.
@@ -28,8 +24,10 @@ const TrackerPage = () => {
       <h2 className="page-title">Green Wallet</h2>
       <p className="page-intro">Log the climate-friendly things you did and see what they saved.</p>
 
-      <form onSubmit={handleSubmit} className="card mb-8 flex flex-wrap items-end gap-3">
-        <label className="flex flex-col flex-1 min-w-60">
+      {/* Phones: one field per row, full width. sm and up: a single row with
+          the select taking the spare space (flex-1). */}
+      <form onSubmit={handleSubmit} className="card mb-8 flex flex-col gap-3 sm:flex-row sm:items-end">
+        <label className="flex flex-col sm:flex-1">
           <span className="label">What did you do?</span>
           <select
             value={actionId}
@@ -53,7 +51,7 @@ const TrackerPage = () => {
           />
         </label>
 
-        <button type="submit" className="btn">
+        <button type="submit" className="btn w-full sm:w-auto">
           Log it
         </button>
       </form>
@@ -74,14 +72,14 @@ const TrackerPage = () => {
             const action = findAction(log.actionId);
             if (!action) return null;
             return (
-              <li key={log.id} className="card flex items-center justify-between p-4">
-                <div>
+              <li key={log.id} className="card flex items-center justify-between gap-3 p-4">
+                <div className="min-w-0">
                   <p className="font-semibold">{action.label}</p>
                   <p className="text-sm text-forest-700/80">
                     {log.date} · {action.co2Kg.toFixed(1)} kg CO2 · R{action.rand.toFixed(2)}
                   </p>
                 </div>
-                <button onClick={() => removeLog(log.id)} className="text-sm text-bark hover:underline">
+                <button onClick={() => removeLog(log.id)} className="min-h-11 shrink-0 rounded-md px-3 text-sm text-bark hover:bg-forest-50 hover:underline">
                   Delete
                 </button>
               </li>

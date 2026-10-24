@@ -30,6 +30,6 @@ describe('App smoke tests', () => {
 
   it('shows the dashboard to a logged-in user', () => {
     renderWithProviders(<App />, { route: '/dashboard', user: { id: '1', name: 'Shella' } });
-    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /welcome back/i })).toBeInTheDocument();
   });
 });

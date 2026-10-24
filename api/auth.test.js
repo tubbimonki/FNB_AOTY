@@ -98,10 +98,7 @@ describe('POST /api/auth/logout', () => {
   });
 });
 
-// ─── YOUR TURN ───────────────────────────────────────────────────────────
-// Remove `.skip` when you start a task. These tests are the spec.
-
-describe.skip('task 1: requireAuth (GET /api/auth/me)', () => {
+describe('GET /api/auth/me (requireAuth)', () => {
   it('returns the user for a valid session cookie', async () => {
     await client.request('POST', '/api/auth/register', shella);
     const res = await client.request('GET', '/api/auth/me');
@@ -146,7 +143,7 @@ describe.skip('task 1: requireAuth (GET /api/auth/me)', () => {
   });
 });
 
-describe.skip('task 2: rate limiting', () => {
+describe('rate limiting', () => {
   it('blocks the 11th login attempt within 15 minutes', async () => {
     const attempt = () =>
       client.request('POST', '/api/auth/login', { email: shella.email, password: 'guess' });

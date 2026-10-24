@@ -12,8 +12,7 @@ const fillForm = async (user) => {
   await user.click(screen.getByRole('button', { name: 'Create account' }));
 };
 
-// YOUR TURN (task 3): remove `.skip` once you start on RegisterPage.jsx.
-describe.skip('task 3: RegisterPage', () => {
+describe('RegisterPage', () => {
   it('registers, then lands on the dashboard logged in', async () => {
     const user = userEvent.setup();
     mockApi({
@@ -23,7 +22,7 @@ describe.skip('task 3: RegisterPage', () => {
 
     await fillForm(user);
 
-    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /welcome back/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Log out \(Shella\)/ })).toBeInTheDocument();
 
     expect(lastBodySentTo('/api/auth/register')).toEqual({

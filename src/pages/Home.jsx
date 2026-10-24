@@ -3,20 +3,30 @@ import NewsSection from '../components/NewsSection';
 import GuidesSection from '../components/GuidesSection';
 import Photo from '../components/Photo';
 import { pageImages } from '../assets/images';
+import { useAuth } from '../features/auth/useAuth';
 
+// The public landing page, for onboarding new visitors. The header logo
+// always comes back here. Members get a shortcut to their dashboard instead.
 const Home = () => {
+  const { user } = useAuth();
+
   return (
     <>
       {/* Hero: photo in the back, a dark green gradient over it so the text stays readable. */}
-      <section className="relative isolate overflow-hidden px-4 py-24 text-center text-white">
+      <section className="relative isolate overflow-hidden px-4 py-16 text-center text-white sm:py-24">
         <Photo image={pageImages.homeHero} background className="absolute inset-0 -z-20 h-full w-full object-cover" />
         <div className="absolute inset-0 -z-10 bg-linear-to-br from-forest-950/90 via-forest-900/75 to-forest-700/60" />
-        <h2 className="mb-4 text-4xl text-white">Protecting Our Planet for Future Generations</h2>
-        <p className="mx-auto mb-8 max-w-2xl text-lg text-forest-100">
+        <h2 className="mb-4 text-3xl text-white sm:text-4xl">Protecting Our Planet for Future Generations</h2>
+        <p className="mx-auto mb-8 max-w-2xl text-base text-forest-100 sm:text-lg">
           Welcome to the central hub for climate awareness. Here, we provide you with the tools and information needed to understand our changing world and take actionable steps toward a sustainable future.
         </p>
-        <div className="flex flex-wrap justify-center gap-3">
-          <Link to="/tracker" className="btn btn-light">Open Green Wallet</Link>
+        {/* Stacked full-width buttons on phones, side by side from sm up. */}
+        <div className="mx-auto flex max-w-xs flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
+          {user ? (
+            <Link to="/dashboard" className="btn btn-light">Go to your dashboard</Link>
+          ) : (
+            <Link to="/register" className="btn btn-light">Get started</Link>
+          )}
           <a href="#features" className="btn border border-forest-300 bg-transparent hover:bg-forest-700">Explore Features</a>
         </div>
       </section>

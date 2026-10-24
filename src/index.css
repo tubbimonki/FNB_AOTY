@@ -11,6 +11,11 @@
   3. @layer components holds a few reusable classes (.btn, .card, ...) for
      patterns that repeat on many pages. Anything one-off stays as utility
      classes in the JSX.
+
+  Mobile first: a class with no prefix applies at every width, so it is the
+  phone style. sm: (640px+), md: (768px+) and lg: (1024px+) only add or
+  override from that width upward. Write the phone version first, then
+  widen it.
 */
 
 @theme {
@@ -50,28 +55,43 @@
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-forest-500;
   }
+
+  /* Long words and URLs wrap instead of pushing the page sideways on a phone. */
+  p, li, h1, h2, h3 {
+    overflow-wrap: break-word;
+  }
+
+  /* The header is sticky, so jump links (#features) stop below it, not under it. */
+  [id] {
+    scroll-margin-top: 5rem;
+  }
+
+  /* Photos never grow wider than the column they sit in. */
+  img {
+    @apply max-w-full;
+  }
 }
 
 @layer components {
   /* Centred content column used by every page. */
   .page {
-    @apply mx-auto w-full max-w-4xl px-4 py-10 sm:px-6;
+    @apply mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 sm:py-10;
   }
 
   .page-title {
-    @apply mb-2 text-3xl;
+    @apply mb-2 text-2xl sm:text-3xl;
   }
 
   .page-intro {
-    @apply mb-8 max-w-2xl text-lg text-forest-800/80;
+    @apply mb-6 max-w-2xl text-base text-forest-800/80 sm:mb-8 sm:text-lg;
   }
 
   .section-title {
-    @apply mb-4 border-b border-forest-200 pb-2 text-2xl;
+    @apply mb-4 border-b border-forest-200 pb-2 text-xl sm:text-2xl;
   }
 
   .card {
-    @apply rounded-xl border border-forest-100 bg-white p-5 shadow-sm;
+    @apply rounded-xl border border-forest-100 bg-white p-4 shadow-sm sm:p-5;
   }
 
   /* Bulleted list with green dots. */
@@ -79,16 +99,19 @@
     @apply ml-5 list-disc space-y-2 marker:text-forest-500;
   }
 
+  /* min-h-11 = 44px, Apple's minimum tap target (Android asks for 48dp). */
   .btn {
-    @apply inline-flex items-center justify-center rounded-lg bg-forest-600 px-4 py-2 font-semibold text-white no-underline shadow-sm transition-colors hover:bg-forest-700 hover:no-underline;
+    @apply inline-flex min-h-11 items-center justify-center rounded-lg bg-forest-600 px-4 py-2 font-semibold text-white no-underline shadow-sm transition-colors hover:bg-forest-700 hover:no-underline;
   }
 
   .btn-light {
     @apply bg-white text-forest-800 hover:bg-forest-50;
   }
 
+  /* Keep inputs at 16px text or larger: iOS Safari zooms the whole page in
+     when you tap a field with smaller text. */
   .input {
-    @apply rounded-lg border border-forest-200 bg-white p-2 focus:border-forest-500;
+    @apply min-h-11 w-full rounded-lg text-base border border-forest-200 bg-white p-2 focus:border-forest-500;
   }
 
   .label {

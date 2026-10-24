@@ -3,6 +3,12 @@ import { findAction } from './actions';
 // Pure functions (no React), so they're easy to test and reuse in the dashboard.
 // Logs whose action no longer exists are skipped instead of crashing.
 
+// Today's local date as "YYYY-MM-DD", the format logs and <input type="date"> use.
+// (toISOString would give the UTC date, which is yesterday before 02:00 in SA.)
+export const today = () => new Date().toLocaleDateString('en-CA');
+
+export const calculateTodayTotals = (logs) => calculateTotals(logs.filter((log) => log.date === today()));
+
 export function calculateTotals(logs) {
   return logs.reduce(
     (totals, log) => {

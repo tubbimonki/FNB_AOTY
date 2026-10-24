@@ -25,7 +25,7 @@ describe('AuthProvider + LoginPage', () => {
     renderApp('/dashboard');
 
     expect(screen.getByText('Checking your session…')).toBeInTheDocument();
-    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /welcome back/i })).toBeInTheDocument();
     expect(vi.mocked(fetch)).toHaveBeenCalledWith(
       '/api/auth/me',
       expect.objectContaining({ credentials: 'include' }),
@@ -41,7 +41,7 @@ describe('AuthProvider + LoginPage', () => {
     await user.type(screen.getByLabelText('Password'), 'correct horse battery');
     await user.click(screen.getByRole('button', { name: 'Log in' }));
 
-    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /welcome back/i })).toBeInTheDocument();
     expect(lastBodySentTo('/api/auth/login')).toEqual({
       email: shella.email,
       password: 'correct horse battery',
