@@ -1,43 +1,28 @@
 import React from 'react';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+import NewsSection from '../components/NewsSection';
+import GuidesSection from '../components/GuidesSection';
 
 const News = () => {
-  const navigation = [
-    { label: 'Home', link: 'home' },
-    { label: 'About', link: 'about' },
-    { label: 'Features', link: 'features' },
-    { label: 'Climate News', link: 'news' },
-    { label: 'Guides & Solutions', link: 'guides' },
-    { label: 'Environmental Benefits', link: 'benefits' },
-  ];
-
   return (
     <>
-      <Header navigation={navigation} />
-
       <main>
-        <section id="news-header">
-          <h2>Latest Climate News</h2>
-          <p>Stay updated with the latest news and developments related to climate change from around the globe.</p>
-          {/* React component will be rendered here */}
-          <div id="news-root" style={{padding: '20px', border: '1px solid #ccc'}}>News Feed Placeholder</div>
+        <section id="news-header" className="mb-8">
+          <h2 className="text-xl font-bold mb-4">Latest Climate News</h2>
+          <p className="mb-4">Stay updated with the latest news and developments related to climate change from around the globe.</p>
+          <NewsSection />
         </section>
 
-        <section id="extra-content">
-          <h2>Additional Resources</h2>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        <section id="extra-content" className="mb-8">
+          <h2 className="text-xl font-bold mb-4">Additional Resources</h2>
+          <p className="mb-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
           <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
         </section>
 
-        <section id="guides-summary">
-          <h2>Quick Guides</h2>
-          <div id="guides-section" style={{padding: '20px', border: '1px solid #ccc'}}>Guides Section Placeholder</div>
+        <section id="guides-summary" className="mb-8">
+          <h2 className="text-xl font-bold mb-4">Quick Guides</h2>
+          <GuidesSection />
         </section>
-
       </main>
-
-      <Footer />
     </>
   );
 };

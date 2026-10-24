@@ -1,14 +1,13 @@
-import React from 'react';
+import { useApiHealth } from '../hooks/useApiHealth';
 
 const Footer = () => {
-  return (
-    <footer>
-      <p>&copy; 2026 Climate Awareness App. All rights reserved.</p>
-      <div className="nonprofit-ad">
+  const apiStatus = useApiHealth();
 
-        <img src="placeholder_nonprofit_logo.png" alt="Non-profit Logo" width="100" />
-        <p>Support organizations working on climate solutions:</p>
-      </div>
+  return (
+    <footer className="mt-12 p-6 text-sm text-gray-600 border-t">
+      <p>&copy; 2026 Climate Awareness App. All rights reserved.</p>
+      <p>Support organizations working on climate solutions.</p>
+      <p>API: {apiStatus}</p>
     </footer>
   );
 };

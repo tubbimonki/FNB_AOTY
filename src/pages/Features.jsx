@@ -1,21 +1,8 @@
 import React from 'react';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 
 const Features = () => {
-  const navigation = [
-    { label: 'Home', link: 'home' },
-    { label: 'About', link: 'about' },
-    { label: 'Features', link: 'features' },
-    { label: 'Climate News', link: 'news' },
-    { label: 'Guides & Solutions', link: 'guides' },
-    { label: 'Environmental Benefits', link: 'benefits' },
-  ];
-
   return (
     <>
-      <Header navigation={navigation} />
-
       <main>
         <section id="features">
           <h2>Our Features</h2>
@@ -31,10 +18,7 @@ const Features = () => {
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
           </p>
         </section>
-
       </main>
-
-      <Footer />
     </>
   );
 };
