@@ -10,6 +10,7 @@ import NotFound from './pages/NotFound';
 import TrackerPage from './features/green-wallet/TrackerPage';
 import DashboardPage from './features/dashboard/DashboardPage';
 import LoginPage from './features/auth/LoginPage';
+import RegisterPage from './features/auth/RegisterPage';
 import RequireAuth from './features/auth/RequireAuth';
 
 // Every route renders inside <Layout>, which adds the header and footer.
@@ -35,6 +36,7 @@ function App() {
           }
         />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

@@ -1,16 +1,14 @@
-import React from 'react';
-
 const NewsSection = () => {
-    return (
-        <div className="news-section">
-            <h2>Latest Climate News</h2>
-            <p>Stay updated with the latest news and developments related to climate change.</p>
-            {/* Placeholder for news feed */}
-            <div className="news-feed">
-                <p>News feed will be integrated here later using a climate news API.</p>
-            </div>
-        </div>
-    );
+  return (
+    <div className="card mb-6">
+      <h3 className="mb-2 text-xl">Latest Climate News</h3>
+      <p className="mb-3">Stay updated with the latest news and developments related to climate change.</p>
+      {/* Placeholder for news feed */}
+      <p className="rounded-lg bg-forest-50 p-3 text-sm text-forest-700">
+        News feed will be integrated here later using a climate news API.
+      </p>
+    </div>
+  );
 };
 
 export default NewsSection;

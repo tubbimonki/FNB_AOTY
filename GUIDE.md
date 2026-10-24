@@ -4,6 +4,8 @@
 
 ## Commands
 
+First time only: copy `.env.example` to `.env` and fill in `JWT_SECRET` (the file tells you how). The API refuses to start without it. Needs Node 22.13 or newer (`node --version`).
+
 ```bash
 npm install         # once, or whenever package.json changes
 npm run dev         # website at http://localhost:5173, reloads on save
@@ -29,15 +31,21 @@ src/
   features/              one folder per product feature, holding its pages, hooks and logic
     green-wallet/        actions.js (the action list), totals.js (maths), useLogs.js (saved logs), TrackerPage.jsx
     dashboard/           DashboardPage.jsx (placeholder, data wired, styling TODO)
-    auth/                placeholder auth: AuthProvider, useAuth, RequireAuth, LoginPage
+    auth/                AuthProvider (talks to /api/auth), useAuth, RequireAuth, LoginPage, RegisterPage
   services/              talking to the outside world: api.js (fetch wrapper), storage.js (localStorage)
   hooks/                 hooks shared by several features (useApiHealth)
-  test/                  test setup + renderWithProviders helper
+  test/                  test setup, renderWithProviders, mockApi (fake API answers in UI tests)
   assets/                images imported from code
 api/
-  index.js               starts the Express server
+  index.js               starts the Express server (reads .env, opens the database)
   app.js                 builds the Express app (routes are mounted here)
-  routes/                one file per route group (health.js so far)
+  db.js                  opens SQLite (data/app.db) and creates tables
+  users.js               every SQL query about users
+  auth/                  passwords.js (bcrypt), tokens.js (JWT + cookie), validate.js
+  middleware/            requireAuth.js: guards members-only API routes
+  routes/                one file per route group (health.js, auth.js)
+  test/                  startTestServer (API + in-memory db) and a cookie-keeping client
+data/                    the SQLite database file. Gitignored, created on first run.
 public/                  copied as-is into the site (favicon)
 _old/                    leftovers from the plain-HTML version. Nothing uses them.
 ```
@@ -48,7 +56,8 @@ Rule of thumb: if it belongs to one feature, it lives in that feature's folder. 
 
 - **New feature:** make `src/features/<name>/`, put its page there, add a `<Route>` in `App.jsx` and a line in `navItems.js`.
 - **Members-only page:** wrap the route element in `<RequireAuth>` (see `/dashboard` in `App.jsx`).
-- **Auth:** everything outside `features/auth/` only calls `useAuth()` and gets `{ user, login, logout }`. To add a real provider, change `AuthProvider.jsx` (and `LoginPage.jsx` for the form). Put keys in `.env`. Search for `TODO(auth)` to find every hook point, including the token header in `services/api.js` and the API route in `api/app.js`.
+- **Auth:** our own, on Express: bcrypt-hashed passwords in SQLite, a signed JWT in an httpOnly cookie. Endpoints: `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`. The frontend only calls `useAuth()` and gets `{ user, status, login, register, logout }`; it never sees the token. The "why" behind every piece, and the open tasks, are in the auth notes doc. Search `YOUR TURN` for the parts still to write.
+- **Members-only API route:** put `requireAuth({ db, jwtSecret })` before the handler; inside, `req.user` is `{ id, email, name }`. Always filter data by `req.user.id`, never by an id the browser sends.
 - **Dashboard:** `DashboardPage.jsx` already gets real totals from `useLogs()` + `calculateTotals()`. `calculateTotalsByDate()` gives per-day numbers for a chart. Search `TODO(dashboard)`.
 - **New API route:** add `api/routes/<name>.js` (an Express `Router`), mount it in `api/app.js` under `/api/<name>`, call it from the frontend with `apiGet('/<name>')` from `services/api.js`. Never write `localhost:4000` in the frontend; Vite's proxy forwards `/api`.
 
@@ -59,8 +68,12 @@ Vitest runs tests and React Testing Library renders components in a fake browser
 - `src/App.test.jsx`: smoke tests that pages render, Green Wallet logs an action, and `/dashboard` needs login.
 - `src/features/green-wallet/totals.test.js`: the CO2 / rand maths.
 - `api/app.test.js`: starts the API on a random port and checks `/api/health`.
+- `api/auth.test.js`: register, login, logout, plus the skipped `task 1` / `task 2` specs.
+- `src/features/auth/*.test.jsx`: login form, session restore, logout, and the skipped `task 3` spec.
 
-To test a component that uses routing or auth, render it with `renderWithProviders(ui, { route, user })` from `src/test/`.
+A `describe.skip(...)` block is a task spec waiting for you: remove `.skip` and make it pass.
+
+To test a component that uses routing or auth, render it with `renderWithProviders(ui, { route, user })` from `src/test/`. To fake API answers, call `mockApi({ 'POST /api/auth/login': [200, { user }] })` from `src/test/mockApi.js` first.
 
 ## Styling
 

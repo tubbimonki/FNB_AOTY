@@ -4,6 +4,7 @@ A climate-change web app: React + Vite + Tailwind frontend, Express API backend.
 
 ```bash
 npm install
+# first time only: copy .env.example to .env and set JWT_SECRET (instructions inside)
 npm run dev     # website at http://localhost:5173
 npm run api     # API at http://localhost:4000/api/health (second terminal)
 npm run check   # lint + tests + build, run before pushing

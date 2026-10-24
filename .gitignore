@@ -28,3 +28,6 @@ dist-ssr
 # Secrets
 .env
 coverage
+
+# Local SQLite database (users, logs). Never commit real user data.
+data/

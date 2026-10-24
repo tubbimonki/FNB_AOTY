@@ -24,17 +24,17 @@ const TrackerPage = () => {
   };
 
   return (
-    <main className="max-w-2xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-2">Green Wallet</h2>
-      <p className="mb-6 text-gray-700">Log the climate-friendly things you did and see what they saved.</p>
+    <main className="page max-w-2xl">
+      <h2 className="page-title">Green Wallet</h2>
+      <p className="page-intro">Log the climate-friendly things you did and see what they saved.</p>
 
-      <form onSubmit={handleSubmit} className="flex flex-wrap gap-3 items-end mb-8">
+      <form onSubmit={handleSubmit} className="card mb-8 flex flex-wrap items-end gap-3">
         <label className="flex flex-col flex-1 min-w-60">
-          <span className="text-sm font-semibold mb-1">What did you do?</span>
+          <span className="label">What did you do?</span>
           <select
             value={actionId}
             onChange={(event) => setActionId(event.target.value)}
-            className="border rounded p-2"
+            className="input"
           >
             {actions.map((action) => (
               <option key={action.id} value={action.id}>{action.label}</option>
@@ -43,45 +43,45 @@ const TrackerPage = () => {
         </label>
 
         <label className="flex flex-col">
-          <span className="text-sm font-semibold mb-1">When?</span>
+          <span className="label">When?</span>
           <input
             type="date"
             value={date}
             max={today()}
             onChange={(event) => setDate(event.target.value)}
-            className="border rounded p-2"
+            className="input"
           />
         </label>
 
-        <button type="submit" className="bg-green-600 hover:bg-green-700 text-white font-semibold rounded px-4 py-2">
+        <button type="submit" className="btn">
           Log it
         </button>
       </form>
 
-      <section aria-label="Today" className="mb-8">
-        <h3 className="text-xl font-bold mb-2">Today</h3>
-        <p>
+      <section aria-label="Today" className="mb-8 rounded-xl bg-forest-800 p-5 text-white">
+        <h3 className="mb-2 text-xl text-white">Today</h3>
+        <p className="text-forest-100">
           {todayTotals.count} actions · {todayTotals.co2Kg.toFixed(1)} kg CO2 avoided · R{todayTotals.rand.toFixed(2)} saved
         </p>
       </section>
 
-      <h3 className="text-xl font-bold mb-3">History</h3>
+      <h3 className="mb-3 text-xl">History</h3>
       {logs.length === 0 ? (
-        <p className="text-gray-500">Nothing logged yet. Add your first action above.</p>
+        <p className="text-forest-700/70">Nothing logged yet. Add your first action above.</p>
       ) : (
         <ul className="space-y-2">
           {logs.map((log) => {
             const action = findAction(log.actionId);
             if (!action) return null;
             return (
-              <li key={log.id} className="flex justify-between items-center border rounded p-3">
+              <li key={log.id} className="card flex items-center justify-between p-4">
                 <div>
                   <p className="font-semibold">{action.label}</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-forest-700/80">
                     {log.date} · {action.co2Kg.toFixed(1)} kg CO2 · R{action.rand.toFixed(2)}
                   </p>
                 </div>
-                <button onClick={() => removeLog(log.id)} className="text-red-600 hover:underline">
+                <button onClick={() => removeLog(log.id)} className="text-sm text-bark hover:underline">
                   Delete
                 </button>
               </li>
