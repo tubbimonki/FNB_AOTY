@@ -34,40 +34,49 @@ const DashboardPage = () => {
     if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();
   }, [hash, view]);
 
+  // Three layouts from one set of elements, each step widening the last:
+  //   phones:  one column (title, strip, list); the sidebar is hidden
+  //   lg+:     the strip runs across the top, then the 2:1 grid (list | sidebar)
+  //   xl+:     full width. The strip becomes a rail stuck to the left edge,
+  //            the list sits in the middle, the sidebar is pushed right (pr-6)
+  // At xl the grid has three named sizes: 10rem rail | flexible middle | 22rem
+  // sidebar, and each child is placed with col-start / row-start.
   return (
-    <main className="page max-w-6xl">
-      <h2 className="page-title">Welcome back{user ? `, ${user.name}` : ''}</h2>
-      <p className="page-intro">Climate news and practical guides in one place. Put them into practice in Green Wallet.</p>
-
-      <FeatureStrip view={view} />
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <section aria-labelledby="main-list-title" className="lg:col-span-2">
-          <h3 id="main-list-title" className="section-title">
-            {view === 'news' ? 'News feed' : 'Latest guides'}
-          </h3>
-          {view === 'news' ? <NewsFeed items={newsItems} /> : <GuideList items={guideItems} />}
-        </section>
-
-        {/* self-start + sticky: on desktop the sidebar stays in view while
-            the longer list scrolls past. top-24 (96px) clears the header. */}
-        <aside aria-label="Sidebar" className="hidden flex-col gap-6 lg:sticky lg:top-24 lg:flex lg:self-start">
-          {view === 'news' ? (
-            <HeadlinesWidget
-              title="New guides"
-              items={latestGuides(guideItems, 3)}
-              linkTo={(guide) => `?view=guides#guide-${guide.id}`}
-            />
-          ) : (
-            <HeadlinesWidget
-              title="Top news"
-              items={topNews(newsItems)}
-              linkTo={(story) => `?view=news#news-${story.id}`}
-            />
-          )}
-          <WalletSummary />
-        </aside>
+    <main className="page grid max-w-6xl gap-6 lg:grid-cols-3 xl:max-w-none xl:grid-cols-[10rem_minmax(0,1fr)_22rem] xl:gap-x-10 xl:pl-0 xl:pr-6">
+      <div className="lg:col-span-3 xl:col-span-1 xl:col-start-2 xl:row-start-1 xl:mx-auto xl:w-full xl:max-w-3xl">
+        <h2 className="page-title">Welcome back{user ? `, ${user.name}` : ''}</h2>
+        <p className="page-intro mb-0 sm:mb-0">Climate news and practical guides in one place. Put them into practice in Green Wallet.</p>
       </div>
+
+      <div className="lg:col-span-3 xl:col-span-1 xl:col-start-1 xl:row-span-2 xl:row-start-1">
+        <FeatureStrip view={view} />
+      </div>
+
+      <section aria-labelledby="main-list-title" className="lg:col-span-2 xl:col-span-1 xl:col-start-2 xl:row-start-2 xl:mx-auto xl:w-full xl:max-w-3xl">
+        <h3 id="main-list-title" className="section-title">
+          {view === 'news' ? 'News feed' : 'Latest guides'}
+        </h3>
+        {view === 'news' ? <NewsFeed items={newsItems} /> : <GuideList items={guideItems} />}
+      </section>
+
+      {/* self-start + sticky: on desktop the sidebar stays in view while
+          the longer list scrolls past. top-24 (96px) clears the header. */}
+      <aside aria-label="Sidebar" className="hidden flex-col gap-6 lg:sticky lg:top-24 lg:flex lg:self-start xl:col-start-3 xl:row-span-2 xl:row-start-1">
+        {view === 'news' ? (
+          <HeadlinesWidget
+            title="New guides"
+            items={latestGuides(guideItems, 3)}
+            linkTo={(guide) => `?view=guides#guide-${guide.id}`}
+          />
+        ) : (
+          <HeadlinesWidget
+            title="Top news"
+            items={topNews(newsItems)}
+            linkTo={(story) => `?view=news#news-${story.id}`}
+          />
+        )}
+        <WalletSummary />
+      </aside>
     </main>
   );
 };

@@ -9,6 +9,10 @@ import { calculateTodayTotals } from '../green-wallet/totals';
 //    while Green Wallet takes you to the hands-on side of the app.
 // aria-current="page" tells screen readers which view is showing; the same
 // attribute drives the highlighted style.
+//
+// On wide screens (xl) the same list turns into a narrow rail stuck to the
+// left edge: one column, moss background, square left corners so it looks
+// attached to the side of the window, and sticky so it stays in view.
 const cardClass = (active) =>
   `flex h-full flex-col rounded-xl border p-3 no-underline transition-colors hover:no-underline sm:p-4 ${
     active
@@ -26,8 +30,8 @@ const FeatureStrip = ({ view }) => {
   ];
 
   return (
-    <nav aria-label="Dashboard sections" className="mb-6 sm:mb-8">
-      <ul className="grid grid-cols-3 gap-2 sm:gap-4">
+    <nav aria-label="Dashboard sections" className="xl:sticky xl:top-24 xl:rounded-r-xl xl:bg-moss xl:p-2 xl:shadow-sm">
+      <ul className="grid grid-cols-3 gap-2 sm:gap-4 xl:grid-cols-1 xl:gap-2">
         {views.map((item) => (
           <li key={item.id}>
             <Link
@@ -37,7 +41,7 @@ const FeatureStrip = ({ view }) => {
             >
               <span className="text-xl" aria-hidden="true">{item.icon}</span>
               <span className="font-semibold">{item.label}</span>
-              <span className="hidden text-sm opacity-80 sm:block">{item.blurb}</span>
+              <span className="hidden text-sm opacity-80 sm:block xl:hidden">{item.blurb}</span>
             </Link>
           </li>
         ))}
@@ -46,7 +50,7 @@ const FeatureStrip = ({ view }) => {
             <span className="text-xl" aria-hidden="true">🌱</span>
             <span className="font-semibold">Green Wallet</span>
             <span className="text-sm opacity-80">
-              {today.co2Kg.toFixed(1)} kg today<span className="hidden sm:inline"> · R{today.rand.toFixed(2)} saved</span>
+              {today.co2Kg.toFixed(1)} kg today<span className="hidden sm:inline xl:hidden"> · R{today.rand.toFixed(2)} saved</span>
             </span>
           </Link>
         </li>
