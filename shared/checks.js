@@ -12,3 +12,11 @@ export function isDay(value) {
 
 // Today in South Africa as "YYYY-MM-DD" (the server runs on UTC).
 export const todaySA = (now = new Date()) => now.toLocaleDateString('en-CA', { timeZone: 'Africa/Johannesburg' });
+
+// A day a log can be for: a real date, not later than tomorrow in SA (a
+// phone a few hours ahead is fine), and not before 2000. Stops a log for
+// 2099 sitting at the top of every list.
+export function isLogDay(value, now = new Date()) {
+  if (!isDay(value) || value < '2000-01-01') return false;
+  return value <= todaySA(new Date(now.getTime() + 24 * 60 * 60 * 1000));
+}

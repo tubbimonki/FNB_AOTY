@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { and, count, desc, eq } from 'drizzle-orm';
 import { requireAuth } from '../../middleware/requireAuth.js';
 import { estimateFootprint } from '../../../shared/footprint.js';
-import { isClientId, isDay } from '../../../shared/checks.js';
+import { isClientId, isLogDay } from '../../../shared/checks.js';
 import { ecoPrefs, footprints, waterLogs } from './schema.js';
 
 // Footprint estimates and water logs, saved per user in Postgres.
@@ -22,7 +22,7 @@ const PREFS = {
 function toRow(userId, { id = crypto.randomUUID(), litres, use = 'other', date } = {}) {
   if (!isClientId(id)) return 'id is invalid';
   if (!Number.isFinite(litres) || litres <= 0 || litres > 2000) return 'litres must be a number between 1 and 2000';
-  if (!isDay(date)) return 'date must look like 2026-10-25';
+  if (!isLogDay(date)) return 'date must be a real day, no later than today';
   return { userId, id, litres, use: String(use).slice(0, 30), date };
 }
 

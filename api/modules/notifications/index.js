@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { and, desc, eq, isNull, or } from 'drizzle-orm';
+import { and, desc, eq, isNull, lt, or } from 'drizzle-orm';
 import { optionalAuth } from '../../middleware/requireAuth.js';
 import { notifications } from './schema.js';
 
@@ -9,6 +9,10 @@ import { notifications } from './schema.js';
 // (power changes, severe alerts) go to everyone.
 const MINE = 30;
 const EVERYONE = 10;
+// The bell only ever shows the newest few, so older rows are deleted (at most
+// once an hour). Without this, area alerts (one per place per day) pile up forever.
+const KEEP_MS = 30 * 24 * 60 * 60 * 1000;
+const SWEEP_EVERY_MS = 60 * 60 * 1000;
 
 const toItem = (row) => ({
   id: row.id,
@@ -24,9 +28,16 @@ export default {
   name: 'notifications',
   events: { emits: [], listens: ['badge.unlocked', 'event.attended', 'report.created', 'service.changed', 'alert.issued'] },
 
-  subscribe({ db, bus }) {
+  subscribe({ db, bus, now = () => new Date() }) {
+    let lastSweep = 0;
     // Same key twice (a retry, a restart) adds nothing.
-    const add = (row) => db.insert(notifications).values(row).onConflictDoNothing();
+    const add = async (row) => {
+      await db.insert(notifications).values(row).onConflictDoNothing();
+      const at = now().getTime();
+      if (at - lastSweep < SWEEP_EVERY_MS) return;
+      lastSweep = at;
+      await db.delete(notifications).where(lt(notifications.createdAt, new Date(at - KEEP_MS)));
+    };
 
     bus.on('badge.unlocked', ({ userId, badge, label, level }) =>
       add({

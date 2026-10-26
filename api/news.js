@@ -100,8 +100,10 @@ export function mergeFeeds(lists, now = Date.now()) {
   return items;
 }
 
-export function createNewsService({ feeds = DEFAULT_FEEDS, fetchImpl = fetch, now = Date.now } = {}) {
-  const cache = createCache({ staleMs: STALE_MS, cooldownMs: COOLDOWN_MS, now });
+// store (api/cacheStore.js): each feed's last answer is kept in the api_cache
+// table too, so after a restart the news shows at once instead of waiting on four sites.
+export function createNewsService({ feeds = DEFAULT_FEEDS, fetchImpl = fetch, now = Date.now, store = null } = {}) {
+  const cache = createCache({ staleMs: STALE_MS, cooldownMs: COOLDOWN_MS, now, store, name: 'news' });
 
   async function loadFeed(feed) {
     const res = await fetchImpl(feed.url, {

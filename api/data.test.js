@@ -38,6 +38,10 @@ describe('saved per user in Postgres', () => {
     expect((await thandi.request('POST', '/api/wallet/logs', { id: 'b', actionId: 'fly-to-mars', date: '2026-10-25' })).status).toBe(400);
     expect((await thandi.request('POST', '/api/wallet/logs', { id: 'b', actionId: 'cold-wash', date: '2026-02-31' })).status).toBe(400);
     expect((await thandi.request('POST', '/api/wallet/logs', { id: 'bad id!', actionId: 'cold-wash', date: '2026-10-25' })).status).toBe(400);
+    const future = await thandi.request('POST', '/api/wallet/logs', { id: 'c', actionId: 'cold-wash', date: '2099-01-01' });
+    expect(future.status).toBe(400);
+    expect(future.body.error).toMatch(/no later than today/);
+    expect((await thandi.request('POST', '/api/eco/water/logs', { id: 'w', litres: 10, date: '2099-01-01' })).status).toBe(400);
   });
 
   it('keeps each person\'s logs apart, even with the same id', async () => {

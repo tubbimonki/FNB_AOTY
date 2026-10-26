@@ -1,5 +1,5 @@
 import { COOKIE_NAME, verifyToken } from '../auth/tokens.js';
-import { findUserById, toPublicUser } from '../users.js';
+import { findUserById, isRevoked, toPublicUser } from '../users.js';
 
 // Reads the session cookie. Returns { user } or { error } (the 401 message).
 async function sessionUser(req, { db, jwtSecret }) {
@@ -14,8 +14,14 @@ async function sessionUser(req, { db, jwtSecret }) {
     return { error: 'Session expired, please log in again' };
   }
 
-  // A valid signature proves we issued the token, not that the account still exists.
-  const user = await findUserById(db, Number(payload.sub)); // sub is a string in JWTs
+  // A valid signature proves we issued the token, not that the account still
+  // exists or that it wasn't logged out. Tokens from before jti existed have
+  // none and run out within 7 days.
+  const [user, revoked] = await Promise.all([
+    findUserById(db, Number(payload.sub)), // sub is a string in JWTs
+    payload.jti ? isRevoked(db, String(payload.jti)) : false,
+  ]);
+  if (revoked) return { error: 'Session expired, please log in again' };
   if (!user || user.email !== payload.email) return { error: 'Not logged in' };
   return { user: toPublicUser(user) }; // never the row: it holds passwordHash
 }

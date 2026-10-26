@@ -72,4 +72,15 @@ describe('AuthProvider + LoginPage', () => {
 
     expect(await screen.findByRole('heading', { name: 'Log in' })).toBeInTheDocument();
   });
+
+  it('logs out on the page when a members-only call says the session ended', async () => {
+    mockApi({
+      'GET /api/auth/me': [200, { user: shella }],
+      // e.g. the token was revoked by logging out in another tab
+      'GET /api/impact/awards': [401, { error: 'Session expired, please log in again' }],
+    });
+    renderApp('/impact');
+
+    expect(await screen.findByRole('heading', { name: 'Log in' })).toBeInTheDocument();
+  });
 });

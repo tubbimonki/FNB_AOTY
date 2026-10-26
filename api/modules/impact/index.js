@@ -11,9 +11,6 @@ import { checklistTicks } from '../alerts/schema.js';
 import { impactAwards, impactBadges } from './schema.js';
 import { reactionEmoji } from '../../../shared/reactions.js';
 
-const REACTION_POINTS = 2;
-const REPORT_POINTS = 5;
-
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const toAward = (row) => ({
@@ -122,7 +119,7 @@ export default {
     bus.on('reaction.added', async ({ userId, eventId, reaction }) => {
       await db
         .insert(impactAwards)
-        .values({ userId, source: `reaction:${eventId}:${reaction}`, label: `Reacted ${reactionEmoji(reaction)} to an event`, points: REACTION_POINTS })
+        .values({ userId, source: `reaction:${eventId}:${reaction}`, label: `Reacted ${reactionEmoji(reaction)} to an event`, points: POINTS.reaction })
         .onConflictDoNothing();
       await check(userId);
     });
@@ -133,7 +130,7 @@ export default {
     bus.on('report.created', async ({ userId, reportId, category }) => {
       await db
         .insert(impactAwards)
-        .values({ userId, source: `report:${reportId}`, label: `Reported: ${category}`, points: REPORT_POINTS })
+        .values({ userId, source: `report:${reportId}`, label: `Reported: ${category}`, points: POINTS.report })
         .onConflictDoNothing();
       await check(userId);
     });

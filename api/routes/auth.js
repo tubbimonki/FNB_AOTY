@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { DUMMY_HASH, hashPassword, verifyPassword } from '../auth/passwords.js';
-import { clearSessionCookie, setSessionCookie } from '../auth/tokens.js';
+import { clearSessionCookie, COOKIE_NAME, setSessionCookie, verifyToken } from '../auth/tokens.js';
 import { normaliseEmail, validateRegistration } from '../auth/validate.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { isUniqueViolation } from '../db.js';
-import { createUser, findUserByEmail, toPublicUser } from '../users.js';
+import { createUser, findUserByEmail, revokeToken, toPublicUser } from '../users.js';
 
 // Handlers are plain async functions: Express 5 passes a thrown error to the
 // error handler in app.js by itself.
@@ -65,8 +65,16 @@ export function authRouter({ db, jwtSecret }) {
     res.json({ user: toPublicUser(user) });
   });
 
-  // POST /api/auth/logout → 204, cookie cleared
-  router.post('/logout', (req, res) => {
+  // POST /api/auth/logout → 204, cookie cleared and the token revoked, so a
+  // copy of the cookie (another tab, a stolen one) stops working too.
+  router.post('/logout', async (req, res) => {
+    let payload = null;
+    try {
+      payload = verifyToken(req.cookies?.[COOKIE_NAME] ?? '', jwtSecret);
+    } catch {
+      // no cookie or a bad one: nothing to revoke
+    }
+    if (payload?.jti) await revokeToken(db, { jti: String(payload.jti), exp: payload.exp });
     clearSessionCookie(res);
     res.status(204).end();
   });

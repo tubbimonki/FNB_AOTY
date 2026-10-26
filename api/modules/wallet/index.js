@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { and, count, desc, eq } from 'drizzle-orm';
 import { requireAuth } from '../../middleware/requireAuth.js';
 import { findAction } from '../../../shared/actions.js';
-import { isClientId, isDay } from '../../../shared/checks.js';
+import { isClientId, isLogDay } from '../../../shared/checks.js';
 import { walletLogs } from './schema.js';
 
 // Green Wallet logs, saved per user in the wallet_logs table.
@@ -17,7 +17,7 @@ function toRow(userId, { id, actionId, date } = {}) {
   if (!isClientId(id)) return 'id is missing or invalid';
   const action = findAction(actionId);
   if (!action) return 'Unknown action';
-  if (!isDay(date)) return 'date must look like 2026-10-25';
+  if (!isLogDay(date)) return 'date must be a real day, no later than today';
   return { userId, id, actionId, category: action.category, date, co2Kg: action.co2Kg, rand: action.rand };
 }
 

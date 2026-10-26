@@ -24,5 +24,17 @@ export const apiCache = pgTable(
   (t) => [index('api_cache_fetched_idx').on(t.fetchedAt)],
 );
 
+// Login tokens ended early by logging out. A token is a signed JWT that stays
+// valid until it expires, so logout writes its id (jti) here and requireAuth
+// refuses it. Rows past expires_at are useless and get deleted.
+export const revokedTokens = pgTable(
+  'revoked_tokens',
+  {
+    jti: text('jti').primaryKey(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  },
+  (t) => [index('revoked_tokens_expires_idx').on(t.expiresAt)],
+);
+
 // Shorthand for "this row belongs to a user" (deleting the user deletes it).
 export const userId = () => integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' });

@@ -19,6 +19,34 @@ function once(key, start) {
   return pending.get(key);
 }
 
+// One PUT at a time per value, always carrying the newest value. Two quick
+// saves (tick, tick) sent at once can reach the server in the wrong order,
+// leaving the older one saved while the browser shows the newer. Here a save
+// made while a PUT is on its way just replaces what goes next.
+// Resolves once the newest value is on the server; rejects if a PUT fails.
+const sending = new Map(); // full key -> { latest, done }
+function sendLatest(fullKey, path, value) {
+  const job = sending.get(fullKey);
+  if (job) {
+    job.latest = value;
+    return job.done;
+  }
+  const next = { latest: value };
+  next.done = (async () => {
+    try {
+      let sent;
+      do {
+        sent = next.latest;
+        await apiPut(path, { value: sent });
+      } while (next.latest !== sent);
+    } finally {
+      sending.delete(fullKey);
+    }
+  })();
+  sending.set(fullKey, next);
+  return next.done;
+}
+
 // Ids deleted while the API couldn't be told, kept in "<key>:u<id>:deleted"
 // until a DELETE gets through. Without this the server's list would bring
 // a deleted log back on the next load.
@@ -126,7 +154,7 @@ export function useSyncedValue(key, path, fallback) {
         // Ours is newer (changed offline, or saved before the database existed): send it.
         if (hasLocal && (loadJSON(dirtyKey, false) || empty)) {
           saveJSON(dirtyKey, true);
-          return apiPut(path, { value: local }).then(() => {
+          return sendLatest(fullKey, path, local).then(() => {
             removeKey(dirtyKey);
             if (!ignore) setSent((n) => n + 1);
           });
@@ -143,9 +171,10 @@ export function useSyncedValue(key, path, fallback) {
     (next) => {
       setValue(next);
       if (!userId) return;
-      const dirtyKey = `${userKey(key, { id: userId })}:dirty`;
+      const fullKey = userKey(key, { id: userId });
+      const dirtyKey = `${fullKey}:dirty`;
       saveJSON(dirtyKey, true);
-      apiPut(path, { value: next })
+      sendLatest(fullKey, path, next)
         .then(() => {
           removeKey(dirtyKey);
           setSent((n) => n + 1);

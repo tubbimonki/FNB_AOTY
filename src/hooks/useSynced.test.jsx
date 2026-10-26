@@ -137,4 +137,26 @@ describe('useSyncedValue', () => {
     await waitFor(() => expect(lastBodySentTo('/api/alerts/checklist')).toEqual({ value: ['kit'] }));
     await waitFor(() => expect(localStorage.getItem('ticks:u1:dirty')).toBeNull());
   });
+
+  it('sends quick saves one at a time, so the newest one is what the server keeps', async () => {
+    let finishFirst;
+    const puts = [];
+    vi.mocked(fetch).mockImplementation(async (url, options = {}) => {
+      if (!options.method) return Response.json({ value: [] });
+      puts.push(JSON.parse(options.body).value);
+      if (puts.length === 1) await new Promise((resolve) => (finishFirst = resolve)); // the first PUT is slow
+      return Response.json({ value: [] });
+    });
+    const { result } = renderHook(() => useSyncedValue('ticks', '/alerts/checklist', []), { wrapper: asUser(thandi) });
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
+
+    act(() => result.current[1](['kit']));
+    act(() => result.current[1](['kit', 'water']));
+    act(() => result.current[1](['kit', 'water', 'charge']));
+    expect(puts).toEqual([['kit']]); // the others wait for the first
+
+    finishFirst();
+    await waitFor(() => expect(localStorage.getItem('ticks:u1:dirty')).toBeNull());
+    expect(puts).toEqual([['kit'], ['kit', 'water', 'charge']]); // the middle one is skipped
+  });
 });

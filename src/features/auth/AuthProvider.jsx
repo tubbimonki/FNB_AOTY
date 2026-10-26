@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { apiGet, apiPost } from '../../services/api';
+import { apiGet, apiPost, SESSION_ENDED } from '../../services/api';
 import { AuthContext } from './authContext';
 
 // Auth state, backed by /api/auth. The token is an httpOnly cookie this code
@@ -23,6 +23,13 @@ export function AuthProvider({ children, initialUser }) {
       cancelled = true;
     };
   }, [skipCheck]);
+
+  // The API said our session is over (see SESSION_ENDED in services/api.js).
+  useEffect(() => {
+    const ended = () => setUser(null);
+    window.addEventListener(SESSION_ENDED, ended);
+    return () => window.removeEventListener(SESSION_ENDED, ended);
+  }, []);
 
   // Each throws an ApiError on failure, so the form can show error.message.
   const login = async ({ email, password }) => {

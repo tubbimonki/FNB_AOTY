@@ -59,6 +59,26 @@ export function createApp({
   // Without this the rate limiter sees every visitor as the proxy's IP.
   app.set('trust proxy', trustProxy);
 
+  // Cheap safety headers on every answer (site and API):
+  // nosniff: the browser must trust our Content-Type, not guess it
+  // frame-ancestors / X-Frame-Options: no other site may show us in a frame (clickjacking)
+  // Referrer-Policy: links out to news sites don't carry our full URLs
+  // Permissions-Policy: location for the weather and map; no camera or microphone
+  // HSTS (production only, it's HTTPS there): always use HTTPS from now on
+  // A full Content-Security-Policy is left out: the map tiles, photos and
+  // fonts come from several hosts, and a wrong list would break pages.
+  app.use((req, res, next) => {
+    res.set({
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'Content-Security-Policy': "frame-ancestors 'none'",
+      'Referrer-Policy': 'strict-origin-when-cross-origin',
+      'Permissions-Policy': 'geolocation=(self), camera=(), microphone=()',
+    });
+    if (process.env.NODE_ENV === 'production') res.set('Strict-Transport-Security', 'max-age=15552000');
+    next();
+  });
+
   app.use(express.json()); // JSON only, so an HTML form on another site can't post to us
   app.use(cookieParser()); // req.cookies, read by requireAuth
 

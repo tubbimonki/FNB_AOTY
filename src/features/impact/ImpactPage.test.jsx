@@ -39,7 +39,7 @@ describe('Your Impact (/impact)', () => {
     renderWithProviders(<App />, { route: '/impact', user: thandi });
     expect(await screen.findByText('1200 / 1500 points')).toBeInTheDocument();
     expect(screen.getByText('Green Guardian')).toBeInTheDocument();
-    const rewards = within(screen.getByRole('region', { name: 'Event Rewards' }));
+    const rewards = within(screen.getByRole('region', { name: 'Rewards' }));
     expect(rewards.getByText('+1200 pts · +7 days Premium')).toBeInTheDocument();
     expect(screen.getByText(/Premium until/)).toBeInTheDocument();
   });
