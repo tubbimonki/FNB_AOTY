@@ -4,6 +4,7 @@ import IconChip from '../../components/ui/IconChip';
 import Pill from '../../components/ui/Pill';
 import ProgressBar from '../../components/ui/ProgressBar';
 import { useAuth } from '../auth/useAuth';
+import { POINTS, POINTS_PER_LEVEL } from '../../../shared/impact';
 import { useImpact } from './useImpact';
 
 const BADGE_LOOK = {
@@ -25,12 +26,13 @@ const initials = (name = '') => name.split(/\s+/).filter(Boolean).slice(0, 2).ma
 const shortDate = (date) => new Date(`${date}T12:00`).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' });
 const awardWorth = (a) => [a.points && `+${a.points} pts`, a.premiumDays && `+${a.premiumDays} days Premium`].filter(Boolean).join(' · ');
 
-// The mockup's "Your Impact" page: level, eco-points, badges and history.
+// "Your Impact": level, eco-points, badges, rewards and recent actions.
 // Members' points come from the server once their logs are saved (see useImpact).
+// Rewards are everything in impact_awards: events, reactions and reports.
 const ImpactPage = () => {
   const { user } = useAuth();
   const impact = useImpact();
-  const levelStart = impact.nextAt - 500;
+  const levelStart = impact.nextAt - POINTS_PER_LEVEL;
   const recent = impact.actionLogs.slice(0, 10);
 
   return (
@@ -59,7 +61,7 @@ const ImpactPage = () => {
               <h2 id="points-title" className="text-base">Eco-Points Earned</h2>
               <p className="font-bold">{impact.points} / {impact.nextAt} points</p>
             </div>
-            <ProgressBar value={impact.points - levelStart} max={500} label="Points to next level" color="#226842" />
+            <ProgressBar value={impact.points - levelStart} max={POINTS_PER_LEVEL} label="Points to next level" color="#226842" />
             <p className="mt-2 text-sm text-slate-500">
               {impact.nextTitle ? `${impact.nextAt - impact.points} points to reach ${impact.nextTitle}` : 'Top level reached. Legend!'}
             </p>
@@ -85,7 +87,7 @@ const ImpactPage = () => {
         <div className="space-y-5">
           {impact.awards.length > 0 && (
             <section aria-labelledby="rewards-title">
-              <h2 id="rewards-title" className="section-label">Event Rewards</h2>
+              <h2 id="rewards-title" className="section-label">Rewards</h2>
               <ul className="card divide-y divide-slate-100 p-0 sm:p-0">
                 {impact.awards.map((a) => (
                   <li key={a.source} className="flex items-center gap-3 px-4 py-3">
@@ -100,7 +102,7 @@ const ImpactPage = () => {
           <section aria-labelledby="actions-title">
             <h2 id="actions-title" className="section-label">Your Actions</h2>
             {recent.length === 0 ? (
-              <p className="card text-slate-600">Nothing yet. Every action you log in Green Wallet earns 10 points.</p>
+              <p className="card text-slate-600">Nothing yet. Every action you log in Green Wallet earns {POINTS.action} points.</p>
             ) : (
               <ul className="card divide-y divide-slate-100 p-0 sm:p-0">
                 {recent.map((log) => {
@@ -115,7 +117,7 @@ const ImpactPage = () => {
                 })}
               </ul>
             )}
-            <p className="mt-3 text-xs text-slate-500">Points: 10 per action, 20 per day under your water goal, 50 for the emergency checklist, 100 for your footprint, plus rewards for going to community events.</p>
+            <p className="mt-3 text-xs text-slate-500">Points: {POINTS.action} per action, {POINTS.waterDay} per day under your water goal, {POINTS.checklist} for the emergency checklist, {POINTS.footprint} for your footprint, {POINTS.reaction} per reaction and {POINTS.report} per report, plus rewards for going to community events.</p>
           </section>
         </div>
       </main>

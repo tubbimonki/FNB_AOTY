@@ -6,9 +6,12 @@ export const POINTS = {
   waterDay: 20,        // each day under the water goal
   checklist: 50,       // emergency checklist fully done
   footprint: 100,      // footprint questionnaire done
+  // Rewards the server gives through impact_awards (api/modules/impact):
+  reaction: 2,         // each emoji reaction on an event
+  report: 5,           // each problem reported on the map
 };
 
-const POINTS_PER_LEVEL = 500;
+export const POINTS_PER_LEVEL = 500;
 const LEVEL_TITLES = ['Seedling', 'Climate Hero', 'Green Guardian', 'Community Champion', 'Earth Keeper'];
 
 // Each badge: how far along you are (have) and what unlocks it (need).

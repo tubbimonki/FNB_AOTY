@@ -122,8 +122,6 @@ export default {
       res.json({ value: keep });
     });
 
-    // GET /api/alerts?lat=-26.2&lon=28.05&place=Johannesburg
-    // -> { alerts, sources: { weather, power, air, saws }, sample }
     // GET /api/alerts/saws -> what the SAWS feed looked like on the last read, to check it works.
     router.get('/saws', async (req, res) => {
       if (!saws?.enabled) return res.json({ enabled: false });
@@ -134,6 +132,8 @@ export default {
       }
     });
 
+    // GET /api/alerts?lat=-26.2&lon=28.05&place=Johannesburg
+    // -> { alerts, sources: { weather, power, air, saws }, sample }
     router.get('/', async (req, res) => {
       const lat = Number(req.query.lat);
       const lon = Number(req.query.lon);
