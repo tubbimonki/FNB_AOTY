@@ -4,6 +4,7 @@ import { startTestServer } from './test/startTestServer.js';
 import { airAlert, powerAlerts } from './modules/alerts/index.js';
 import { createSawsService } from './saws.js';
 import { aqiBand } from './airQuality.js';
+import { notifications } from './modules/notifications/schema.js';
 
 const stormyDay = { date: '2026-10-26', code: 95, maxC: 24, minC: 14, rainChance: 90, uvMax: 3, rainMm: 40, gustKph: 85 };
 const fakeWeather = (days = [stormyDay, stormyDay]) => ({ getWeather: vi.fn(async () => ({ current: {}, days, stale: false })) });
@@ -131,5 +132,19 @@ describe('area notifications for the bell', () => {
     status = 'outage';
     await fetch(`${api.baseUrl}/api/services/status`);
     expect(await notes()).toEqual([expect.objectContaining({ kind: 'service', title: 'Power update for Block 14', body: 'Power is outage' })]);
+  });
+
+  it('deletes notifications older than 30 days when new ones arrive', async () => {
+    let status = 'ok';
+    const eskom = { enabled: true, getArea: async () => ({ electricity: { status, message: `Power is ${status}`, area: 'Block 14' }, water: null }) };
+    api = await startTestServer({ eskom });
+    const old = new Date(Date.now() - 40 * 24 * 60 * 60 * 1000);
+    await api.db.insert(notifications).values({ key: 'service:old', kind: 'service', title: 'An old power update', createdAt: old });
+    expect((await notes()).map((n) => n.title)).toEqual(['An old power update']);
+
+    await fetch(`${api.baseUrl}/api/services/status`);
+    status = 'outage';
+    await fetch(`${api.baseUrl}/api/services/status`); // a new notification triggers the sweep
+    expect((await notes()).map((n) => n.title)).toEqual(['Power update for Block 14']);
   });
 });
