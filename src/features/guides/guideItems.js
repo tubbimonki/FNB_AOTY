@@ -1,6 +1,7 @@
 // Guides, each pointing to real how-to pages from government, the UN and NGOs.
-// Shape: { id, title, summary, topic, date: 'YYYY-MM-DD', minutes, links: [{ title, publisher, url }] }
+// Shape: { id, title, summary, topic, date: 'YYYY-MM-DD', minutes, widget, links: [{ title, publisher, url }] }
 // date = when we last checked the links.
+// widget = the quick tool shown beside the guide on wide screens (see GuideList).
 export const guideItems = [
   {
     id: 'g1',
@@ -9,6 +10,7 @@ export const guideItems = [
     topic: 'Water',
     date: '2026-10-26',
     minutes: 6,
+    widget: 'water',
     links: [
       { title: 'How to Make Water Safe in an Emergency', publisher: 'CDC', url: 'https://www.cdc.gov/water-emergency/about/' },
       { title: 'SODIS manual: solar water disinfection (PDF)', publisher: 'Eawag', url: 'https://www.eawag.ch/fileadmin/Domain1/Abteilungen/sandec/publikationen/SWP/SODIS_manual_2016.pdf' },
@@ -21,6 +23,7 @@ export const guideItems = [
     topic: 'Energy',
     date: '2026-10-26',
     minutes: 8,
+    widget: 'power',
     links: [
       { title: 'Going solar safely: installer checklist for customers', publisher: 'City of Cape Town', url: 'https://www.capetown.gov.za/Media-and-news/Going%20solar%20safely%20installer%20checklist%20for%20customers' },
       { title: 'Tips to save electricity', publisher: 'Vuk’uzenzele (with Eskom)', url: 'https://www.vukuzenzele.gov.za/tips-save-electricity' },
@@ -33,6 +36,7 @@ export const guideItems = [
     topic: 'Community',
     date: '2026-10-26',
     minutes: 5,
+    widget: 'recycling',
     links: [
       { title: 'PETCO helps turn plastic waste into profit', publisher: 'Vuk’uzenzele', url: 'https://www.vukuzenzele.gov.za/petco-helps-turn-plastic-waste-profit' },
       { title: 'SA’s circular economy is no longer optional', publisher: 'SAnews', url: 'https://www.sanews.gov.za/south-africa/sas-circular-economy-no-longer-optional-it-our-next-economic-frontier' },
@@ -45,6 +49,7 @@ export const guideItems = [
     topic: 'Food',
     date: '2026-10-26',
     minutes: 7,
+    widget: 'wallet',
     links: [
       { title: 'Conservation Agriculture principles', publisher: 'FAO', url: 'https://www.fao.org/conservation-agriculture/overview/conservation-agriculture-principles/en' },
       { title: 'Minimum mechanical soil disturbance', publisher: 'FAO', url: 'https://www.fao.org/conservation-agriculture/in-practice/minimum-mechanical-soil-disturbance/en' },
@@ -57,6 +62,7 @@ export const guideItems = [
     topic: 'Water',
     date: '2026-10-26',
     minutes: 6,
+    widget: 'ewaste',
     links: [
       { title: 'Adopt-a-River Programme', publisher: 'Department of Water and Sanitation', url: 'https://www.dws.gov.za/iwqs/rhp/adoptariv.aspx' },
       { title: 'Lead poisoning fact sheet', publisher: 'WHO', url: 'https://www.who.int/news-room/fact-sheets/detail/lead-poisoning-and-health' },

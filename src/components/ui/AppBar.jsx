@@ -9,7 +9,7 @@ import Vine from './Vine';
 const AppBar = ({ title, back, action }) => (
   <div className="sticky top-0 z-30 overflow-hidden border-b-2 border-(--accent-glow) bg-forest-900 text-white shadow-sm lg:relative lg:shadow-none">
     <Vine className="pointer-events-none absolute right-12 bottom-0 h-9 text-(--accent-glow) opacity-30 sm:right-16 lg:right-24 lg:h-11" />
-    <div className="relative mx-auto grid min-h-14 max-w-6xl grid-cols-[3rem_1fr_3rem] items-center px-2 sm:px-4 lg:min-h-16">
+    <div className="relative wrap grid min-h-14 grid-cols-[3rem_1fr_3rem] items-center px-2 sm:px-4 lg:min-h-16">
       {back ? (
         <Link to={back} aria-label="Back" className="grid size-11 place-items-center rounded-full text-white transition-colors duration-(--motion-fast) hover:bg-white/10 active:bg-white/20">
           <ArrowLeft className="size-5" aria-hidden="true" />

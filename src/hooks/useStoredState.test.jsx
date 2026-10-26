@@ -27,4 +27,11 @@ describe('useStoredState', () => {
     const { result } = renderHook(() => useStoredState('logs', []), { wrapper: asUser(null) });
     expect(result.current[0]).toEqual([]);
   });
+
+  it('keeps two components on the same key in step', () => {
+    const first = renderHook(() => useStoredState('water', []), { wrapper: asUser(null) });
+    const second = renderHook(() => useStoredState('water', []), { wrapper: asUser(null) });
+    act(() => first.result.current[1](['shower']));
+    expect(second.result.current[0]).toEqual(['shower']);
+  });
 });

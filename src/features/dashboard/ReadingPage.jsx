@@ -29,9 +29,11 @@ const ReadingPage = ({ view }) => {
 
   // Phones: one column. lg+: strip on top, then a 2:1 grid (list | sidebar).
   // xl+: full width, strip as a left rail (10rem | flexible | 22rem sidebar).
+  // 2xl+: the middle column widens so news runs in two columns and each guide
+  // gets its quick tool beside it (see GuideList).
   return (
     <main className="page grid max-w-6xl gap-6 lg:grid-cols-3 xl:max-w-none xl:grid-cols-[10rem_minmax(0,1fr)_22rem] xl:gap-x-10 xl:pl-0 xl:pr-6">
-      <div className="lg:col-span-3 xl:col-span-1 xl:col-start-2 xl:row-start-1 xl:mx-auto xl:w-full xl:max-w-3xl">
+      <div className="lg:col-span-3 xl:col-span-1 xl:col-start-2 xl:row-start-1 xl:mx-auto xl:w-full xl:max-w-3xl 2xl:max-w-6xl 4xl:max-w-[84rem]">
         <h1 className="page-title">{titles[view].title}</h1>
         <p className="page-intro mb-0 sm:mb-0">{titles[view].intro}</p>
       </div>
@@ -40,7 +42,7 @@ const ReadingPage = ({ view }) => {
         <FeatureStrip view={view} />
       </div>
 
-      <section aria-labelledby="main-list-title" className="lg:col-span-2 xl:col-span-1 xl:col-start-2 xl:row-start-2 xl:mx-auto xl:w-full xl:max-w-3xl">
+      <section aria-labelledby="main-list-title" className="lg:col-span-2 xl:col-span-1 xl:col-start-2 xl:row-start-2 xl:mx-auto xl:w-full xl:max-w-3xl 2xl:max-w-6xl 4xl:max-w-[84rem]">
         <h2 id="main-list-title" className="section-title">
           {view === 'news' ? 'News feed' : 'Latest guides'}
         </h2>
@@ -69,7 +71,8 @@ const ReadingPage = ({ view }) => {
             linkTo={(story) => `/dashboard/news#news-${story.id}`}
           />
         )}
-        <WalletSummary />
+        {/* On wide screens the guides list already shows it beside the food guide. */}
+        <WalletSummary className={view === 'guides' ? '2xl:hidden' : ''} />
       </aside>
     </main>
   );

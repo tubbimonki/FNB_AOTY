@@ -8,6 +8,11 @@ import { calculateTodayTotals } from '../green-wallet/totals';
 import { useWeather } from '../weather/useWeather';
 import { describeWeather } from '../weather/weather';
 import { useAlerts } from '../alerts/useAlerts';
+import { useWide } from '../../hooks/useWide';
+import WaterQuick from '../water/WaterQuick';
+import PowerQuick from '../services/PowerQuick';
+import EventsQuick from '../community/EventsQuick';
+import WalletSummary from '../green-wallet/WalletSummary';
 import AlertCard from '../alerts/AlertCard';
 import Photo from '../../components/Photo';
 import { pageImages } from '../../assets/images';
@@ -85,6 +90,7 @@ const DashboardPage = () => {
   const { items: newsItems } = useNews();
   const guides = latestGuides(guideItems);
   const [newestGuide] = guides;
+  const wide = useWide();
 
   // Old links like /dashboard?view=guides go to the dedicated page.
   const oldView = searchParams.get('view');
@@ -92,63 +98,77 @@ const DashboardPage = () => {
     return <Navigate replace to={`/dashboard/${oldView}`} />;
   }
 
+  // 2xl+ (wide desktops): the page gains a right column of live quick widgets,
+  // so the extra width holds something useful instead of empty margins.
   return (
-    <main className="mx-auto max-w-6xl lg:px-6">
-      <Hero name={user?.name} alertCount={alerts.length} {...weather} />
+    <main className="wrap lg:px-6 2xl:grid 2xl:grid-cols-[minmax(0,1fr)_22rem] 2xl:gap-x-6 3xl:grid-cols-[minmax(0,1fr)_24rem]">
+      <div className="min-w-0">
+        <Hero name={user?.name} alertCount={alerts.length} {...weather} />
 
-      <div className="space-y-7 px-4 py-5 sm:px-6 lg:px-0">
-        {alerts[0] && <AlertCard alert={alerts[0]} compact />}
+        <div className="space-y-7 px-4 py-5 sm:px-6 lg:px-0">
+          {alerts[0] && <AlertCard alert={alerts[0]} compact />}
 
-        <section aria-labelledby="quick-title">
-          <h2 id="quick-title" className="section-label">Quick Access</h2>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-            <MiniWidget to="/alerts" icon={CloudRain} tone="blue" title="Weather Alerts" summary="Check local warnings" />
-            <MiniWidget to="/services" icon={Droplet} tone="cyan" title="Essential Services" summary="Water, power & transport" />
-            <MiniWidget to="/eco" icon={Leaf} tone="green" title="Eco-Impact" summary="Track your progress" />
-            <MiniWidget to="/map" icon={MapIcon} tone="purple" title="Community Map" summary="Find facilities & report" />
+          <section aria-labelledby="quick-title">
+            <h2 id="quick-title" className="section-label">Quick Access</h2>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+              <MiniWidget to="/alerts" icon={CloudRain} tone="blue" title="Weather Alerts" summary="Check local warnings" />
+              <MiniWidget to="/services" icon={Droplet} tone="cyan" title="Essential Services" summary="Water, power & transport" />
+              <MiniWidget to="/eco" icon={Leaf} tone="green" title="Eco-Impact" summary="Track your progress" />
+              <MiniWidget to="/map" icon={MapIcon} tone="purple" title="Community Map" summary="Find facilities & report" />
+            </div>
+          </section>
+
+          <section aria-labelledby="shortcuts-title">
+            <h2 id="shortcuts-title" className="section-label">Shortcuts</h2>
+            <div className="grid grid-cols-3 gap-3 sm:gap-4">
+              <MiniWidget to="/dashboard/news" icon={Newspaper} tone="gray" title="Climate news" summary={`${newsItems.length} stories`} />
+              <MiniWidget
+                to="/dashboard/guides"
+                icon={BookOpen}
+                tone="amber"
+                title="Guides"
+                summary={newestGuide ? `New: ${newestGuide.topic}, ${newestGuide.minutes} min` : 'Coming soon'}
+              />
+              <MiniWidget
+                to="/tracker"
+                icon={Wallet}
+                tone="green"
+                title="Green Wallet"
+                summary={`${today.co2Kg.toFixed(1)} kg CO2 · R${today.rand.toFixed(2)} today`}
+              />
+            </div>
+          </section>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <ScrollWidget id="latest-news" title="Latest News" more="/dashboard/news">
+              {newsItems.slice(0, 12).map((story) => (
+                <li key={story.id}>
+                  <a href={story.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-forest-950">{story.title}</a>
+                  <p className="text-xs text-slate-500">{story.source}{story.date && ` · ${story.date}`}</p>
+                </li>
+              ))}
+            </ScrollWidget>
+            <ScrollWidget id="latest-guides" title="Latest Guides" more="/dashboard/guides">
+              {guides.map((guide) => (
+                <li key={guide.id}>
+                  <Link to={`/dashboard/guides#guide-${guide.id}`} className="font-semibold text-forest-950">{guide.title}</Link>
+                  <p className="text-xs text-slate-500">{guide.topic} · {guide.minutes} min · {guide.links.length} sources</p>
+                </li>
+              ))}
+            </ScrollWidget>
           </div>
-        </section>
-
-        <section aria-labelledby="shortcuts-title">
-          <h2 id="shortcuts-title" className="section-label">Shortcuts</h2>
-          <div className="grid grid-cols-3 gap-3 sm:gap-4">
-            <MiniWidget to="/dashboard/news" icon={Newspaper} tone="gray" title="Climate news" summary={`${newsItems.length} stories`} />
-            <MiniWidget
-              to="/dashboard/guides"
-              icon={BookOpen}
-              tone="amber"
-              title="Guides"
-              summary={newestGuide ? `New: ${newestGuide.topic}, ${newestGuide.minutes} min` : 'Coming soon'}
-            />
-            <MiniWidget
-              to="/tracker"
-              icon={Wallet}
-              tone="green"
-              title="Green Wallet"
-              summary={`${today.co2Kg.toFixed(1)} kg CO2 · R${today.rand.toFixed(2)} today`}
-            />
-          </div>
-        </section>
-
-        <div className="grid gap-4 lg:grid-cols-2">
-          <ScrollWidget id="latest-news" title="Latest News" more="/dashboard/news">
-            {newsItems.slice(0, 12).map((story) => (
-              <li key={story.id}>
-                <a href={story.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-forest-950">{story.title}</a>
-                <p className="text-xs text-slate-500">{story.source}{story.date && ` · ${story.date}`}</p>
-              </li>
-            ))}
-          </ScrollWidget>
-          <ScrollWidget id="latest-guides" title="Latest Guides" more="/dashboard/guides">
-            {guides.map((guide) => (
-              <li key={guide.id}>
-                <Link to={`/dashboard/guides#guide-${guide.id}`} className="font-semibold text-forest-950">{guide.title}</Link>
-                <p className="text-xs text-slate-500">{guide.topic} · {guide.minutes} min · {guide.links.length} sources</p>
-              </li>
-            ))}
-          </ScrollWidget>
         </div>
       </div>
+
+      {wide && (
+        <aside aria-labelledby="glance-title" className="space-y-4 pt-6">
+          <h2 id="glance-title" className="section-label">At a glance</h2>
+          <PowerQuick />
+          <WaterQuick />
+          <WalletSummary />
+          <EventsQuick />
+        </aside>
+      )}
     </main>
   );
 };

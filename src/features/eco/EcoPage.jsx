@@ -12,6 +12,10 @@ import { DAILY_GOAL_L, litresByDate } from '../water/water';
 import { SA_AVERAGE_TONNES } from '../../../shared/footprint';
 import { useImpact } from '../impact/useImpact';
 import GrowingPlant from './GrowingPlant';
+import { useWide } from '../../hooks/useWide';
+import WaterQuick from '../water/WaterQuick';
+import RecyclingQuick from '../recycling/RecyclingQuick';
+import RelatedGuides from '../guides/RelatedGuides';
 
 // Weekly targets for the two action-based goals. Tune freely.
 const WEEKLY = { home: 7, waste: 3 };
@@ -36,11 +40,12 @@ const EcoPage = () => {
   const water = litresByDate(waterLogs)[today()] ?? 0;
   const home = thisWeek('home');
   const waste = thisWeek('waste');
+  const wide = useWide();
 
   return (
     <>
       <AppBar title="Eco-Impact" action={<Link to="/impact" aria-label="Your impact" className="grid size-11 place-items-center rounded-full text-white hover:bg-white/10"><Award className="size-5" aria-hidden="true" /></Link>} />
-      <main className="page grid gap-5 lg:grid-cols-2">
+      <main className="page grid gap-5 lg:grid-cols-2 2xl:grid-cols-3">
         <div className="space-y-5">
           <section aria-labelledby="footprint-title" className="relative isolate overflow-hidden rounded-3xl p-6 text-center shadow-md">
             <Photo image={pageImages.ecoHero} background className="absolute inset-0 -z-20 h-full w-full object-cover" />
@@ -82,6 +87,15 @@ const EcoPage = () => {
             <MiniWidget to="/impact" icon={Award} tone="amber" title="Your Impact" summary={`${points} eco-points`} />
           </div>
         </div>
+
+        {/* Wide screens: log water and check a bin without leaving the page. */}
+        {wide && (
+          <aside aria-label="Quick tools" className="space-y-5">
+            <WaterQuick />
+            <RecyclingQuick />
+            <RelatedGuides ids={['g1', 'g3']} />
+          </aside>
+        )}
       </main>
     </>
   );

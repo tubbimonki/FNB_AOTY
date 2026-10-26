@@ -50,6 +50,17 @@ describe('GET /api/alerts', () => {
     expect(body.alerts.some((a) => a.id === 'wx-storm')).toBe(true);
   });
 
+  it('answers without a slow source instead of waiting for it', async () => {
+    let finish;
+    const slowSaws = { enabled: true, getWarnings: vi.fn(() => new Promise((resolve) => { finish = resolve; })) };
+    const started = Date.now();
+    const { body } = await getAlerts({ weather: fakeWeather(), saws: slowSaws, sourceDeadlineMs: 50 });
+    expect(Date.now() - started).toBeLessThan(2000);
+    expect(body.sources).toMatchObject({ weather: 'live', saws: 'unavailable' });
+    expect(body.alerts.some((a) => a.id === 'wx-storm')).toBe(true);
+    finish({ warnings: [], province: 'Gauteng', stale: false }); // it may still finish later
+  });
+
   it('falls back to labelled sample alerts when nothing answers', async () => {
     const { body } = await getAlerts({ weather: { getWeather: async () => { throw new Error('down'); } }, eskom: { enabled: false } });
     expect(body.sample).toBe(true);

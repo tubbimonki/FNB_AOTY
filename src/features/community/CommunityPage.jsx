@@ -15,6 +15,9 @@ import { useEvents } from './useEvents';
 import { useReactionSummary } from './useReactions';
 import { ago } from './ago';
 import { EMERGENCY_CONTACTS, RELIEF_LINKS } from './helpContacts';
+import { useWide } from '../../hooks/useWide';
+import PowerQuick from '../services/PowerQuick';
+import RelatedGuides from '../guides/RelatedGuides';
 
 const UPDATE_ICONS = {
   road: { icon: ShieldCheck, tone: 'green' },
@@ -189,6 +192,7 @@ const CommunityPage = () => {
   const { status, events, offline } = useEvents();
   const reactions = useReactionSummary();
   const upcoming = events.filter((e) => !e.past);
+  const wide = useWide();
 
   return (
     <>
@@ -201,38 +205,48 @@ const CommunityPage = () => {
           </Link>
         }
       />
-      <main className="page space-y-6">
-        <section aria-labelledby="events-title">
-          <div className="mb-3 flex items-baseline justify-between gap-2">
-            <h2 id="events-title" className="section-label mb-0">Community events</h2>
-            <Link to="?tab=events" className="text-sm font-semibold">See all</Link>
-          </div>
-          {status === 'loading' && <div className="card"><LoadState status="loading" what="events" /></div>}
-          {status === 'ready' && upcoming.length > 0 && <EventsCarousel events={upcoming} reactions={reactions} />}
-          {status === 'ready' && upcoming.length === 0 && <p className="card text-slate-600">No upcoming events yet.</p>}
-        </section>
-
-        <Tools />
-
-        <Segmented
-          dark
-          label="Show"
-          value={view}
-          onChange={(id) => setParams(id === 'nearby' ? {} : { tab: id }, { replace: true })}
-          className="max-w-md"
-          options={TABS}
-        />
-        {view === 'nearby' && <Nearby />}
-        {view === 'events' && (status === 'ready' ? <Events events={events} offline={offline} reactions={reactions} /> : <div className="card"><LoadState status="loading" what="events" /></div>)}
-        {view === 'mine' &&
-          (user ? (
-            <MyReports />
-          ) : (
-            <div className="card text-center">
-              <p className="mb-3 text-slate-600">Log in to see the problems you've reported.</p>
-              <Link to="/login" state={{ from: '/community' }} className="btn">Log in</Link>
+      {/* Wide screens: a side column with the neighbourhood power status and
+          the community recycling guide. */}
+      <main className="page 2xl:grid 2xl:grid-cols-[minmax(0,1fr)_22rem] 2xl:gap-6">
+        <div className="min-w-0 space-y-6">
+          <section aria-labelledby="events-title">
+            <div className="mb-3 flex items-baseline justify-between gap-2">
+              <h2 id="events-title" className="section-label mb-0">Community events</h2>
+              <Link to="?tab=events" className="text-sm font-semibold">See all</Link>
             </div>
-          ))}
+            {status === 'loading' && <div className="card"><LoadState status="loading" what="events" /></div>}
+            {status === 'ready' && upcoming.length > 0 && <EventsCarousel events={upcoming} reactions={reactions} />}
+            {status === 'ready' && upcoming.length === 0 && <p className="card text-slate-600">No upcoming events yet.</p>}
+          </section>
+
+          <Tools />
+
+          <Segmented
+            dark
+            label="Show"
+            value={view}
+            onChange={(id) => setParams(id === 'nearby' ? {} : { tab: id }, { replace: true })}
+            className="max-w-md"
+            options={TABS}
+          />
+          {view === 'nearby' && <Nearby />}
+          {view === 'events' && (status === 'ready' ? <Events events={events} offline={offline} reactions={reactions} /> : <div className="card"><LoadState status="loading" what="events" /></div>)}
+          {view === 'mine' &&
+            (user ? (
+              <MyReports />
+            ) : (
+              <div className="card text-center">
+                <p className="mb-3 text-slate-600">Log in to see the problems you've reported.</p>
+                <Link to="/login" state={{ from: '/community' }} className="btn">Log in</Link>
+              </div>
+            ))}
+        </div>
+        {wide && (
+          <aside aria-label="Around you" className="space-y-5">
+            <PowerQuick />
+            <RelatedGuides ids={['g3']} title="Community guides" />
+          </aside>
+        )}
       </main>
     </>
   );

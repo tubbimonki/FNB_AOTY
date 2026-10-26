@@ -7,6 +7,7 @@ services:
     runtime: node
     plan: free
     # --include=dev: Vite is a devDependency, and NODE_ENV=production skips those.
+    # (.npmrc says the same, so a hand-made service with `npm install` works too.)
     buildCommand: npm ci --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
@@ -20,7 +21,8 @@ services:
       - key: JWT_SECRET
         generateValue: true
       # Secrets and ids you fill in on the Render dashboard (sync: false = not in git).
-      # DATABASE_URL: the Neon connection string. Without it data is lost on restart.
+      # DATABASE_URL: the Neon connection string. REQUIRED: without it the server
+      # stops at start with a message (PGlite needs more RAM than the free plan has).
       - key: DATABASE_URL
         sync: false
       - key: ESKOMSEPUSH_TOKEN

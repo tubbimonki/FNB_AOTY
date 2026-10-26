@@ -9,6 +9,8 @@ import { useAlerts } from './useAlerts';
 import AlertCard from './AlertCard';
 import EmergencyChecklist from './EmergencyChecklist';
 import SourceStatus from './SourceStatus';
+import { useWide } from '../../hooks/useWide';
+import RelatedGuides from '../guides/RelatedGuides';
 
 const dayName = (date) => new Date(`${date}T12:00`).toLocaleDateString('en-ZA', { weekday: 'long', day: 'numeric', month: 'short' });
 
@@ -39,6 +41,7 @@ const AlertsPage = () => {
   const weather = useWeather();
   const { alerts, sample, sources, apiStatus, retry: retryAlerts } = useAlerts(weather);
   const [view, setView] = useState('current');
+  const wide = useWide();
 
   const refresh = () => {
     weather.retry();
@@ -48,8 +51,8 @@ const AlertsPage = () => {
   return (
     <>
       <AppBar title="Weather & Climate Alerts" back="/dashboard" action={<AppBarButton icon={RefreshCw} label="Refresh" onClick={refresh} />} />
-      <main className="page grid gap-5 lg:grid-cols-5">
-        <div className="space-y-4 lg:col-span-3">
+      <main className="page grid gap-5 lg:grid-cols-5 2xl:grid-cols-12">
+        <div className="space-y-4 lg:col-span-3 2xl:col-span-6">
           <Segmented
             label="Show"
             value={view}
@@ -75,7 +78,19 @@ const AlertsPage = () => {
           {/* The most serious alert stays visible whatever view is open. */}
           {view !== 'alerts' && alerts[0] && <AlertCard alert={alerts[0]} />}
         </div>
-        <div className="lg:col-span-2">
+        {/* Wide screens: the week ahead stays in view next to today's weather. */}
+        {wide && (
+          <aside aria-label="Week ahead" className="space-y-4 2xl:col-span-3">
+            {view !== 'forecast' && (
+              <section aria-labelledby="week-title">
+                <h2 id="week-title" className="section-label">Next 7 days</h2>
+                <ForecastList weather={weather.weather} />
+              </section>
+            )}
+            <RelatedGuides ids={['g1']} title="Be prepared" />
+          </aside>
+        )}
+        <div className="lg:col-span-2 2xl:col-span-3">
           <EmergencyChecklist />
         </div>
       </main>

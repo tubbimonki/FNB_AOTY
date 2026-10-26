@@ -12,7 +12,7 @@ const Header = ({ navigation }) => {
 
   return (
     <header className="sticky top-0 z-50 hidden bg-forest-950 text-white shadow lg:block">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-2.5">
+      <div className="wrap flex items-center justify-between gap-4 px-6 py-2.5">
         <Link to="/home" className="flex items-center gap-2 text-lg font-bold text-white no-underline hover:no-underline">
           <span className="grid size-8 place-items-center rounded-full bg-sprout/20 text-sprout" aria-hidden="true">
             <Sprout className="size-5" />

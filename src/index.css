@@ -150,6 +150,23 @@
 
   /* Height of the phone bottom tab bar, so content can leave room for it. */
   --spacing-tabbar: 4.5rem;
+
+  /* Extra breakpoints for big desktop screens (Tailwind stops at 2xl = 1536px).
+     3xl = 1920px (full HD), 4xl = 2400px (1440p and up). */
+  --breakpoint-3xl: 120rem;
+  --breakpoint-4xl: 150rem;
+}
+
+/* Content width shared by the header, app bars, pages and footer.
+   Phones to 1535px: 72rem (1152px), as before. From 2xl it grows with the
+   screen so a wide monitor isn't two big empty margins. */
+@utility wrap {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 72rem;
+  @media (width >= 96rem) { max-width: 88rem; }
+  @media (width >= 120rem) { max-width: 104rem; }
+  @media (width >= 150rem) { max-width: 128rem; }
 }
 
 /* Speeds as plain variables, used as duration-(--motion-base). */
@@ -191,6 +208,14 @@
 }
 
 @layer base {
+  /* Big screens: nudge the root font size up, and every rem-based size
+     (text, padding, cards, icons) grows with it. Breakpoints are unaffected:
+     media queries always measure rem at the browser default of 16px. */
+  html {
+    @media (width >= 120rem) { font-size: 106.25%; } /* 17px */
+    @media (width >= 150rem) { font-size: 112.5%; }  /* 18px */
+  }
+
   /* Two faint light pools (sun top left, sky bottom right) instead of flat grey. */
   body {
     @apply bg-canvas font-sans text-forest-950 antialiased;
@@ -265,7 +290,7 @@
 @layer components {
   /* Centred content column used by every page. */
   .page {
-    @apply mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 sm:py-8;
+    @apply wrap px-4 py-5 sm:px-6 sm:py-8;
   }
 
   .page-title {
