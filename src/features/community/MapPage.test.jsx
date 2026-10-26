@@ -24,7 +24,7 @@ describe('Community Map (/map)', () => {
     expect(await screen.findByText('3 pins')).toBeInTheDocument();
     expect(list().getAllByRole('listitem').map((li) => within(li).getByText(/./, { selector: 'p.font-semibold' }).textContent)).toEqual(['Flooded road', 'Clinic', 'Burst pipe']);
     // Legend lists the kinds on the map; OpenStreetMap is "down" here, so demo facilities stay.
-    expect(within(screen.getByRole('list', { name: 'Legend' })).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['⚠️Hazard (unverified)', '📣Community report (unverified)', '🏠Safe facility']);
+    expect(within(screen.getByRole('list', { name: 'Legend' })).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Within 1.5 km of you', 'Hazard (unverified)', 'Community report (unverified)', 'Safe facility']);
     expect(await screen.findByText(/Demo facilities: OpenStreetMap could not be reached/)).toBeInTheDocument();
   });
 
@@ -45,6 +45,24 @@ describe('Community Map (/map)', () => {
     expect(list().queryByText('Clinic')).not.toBeInTheDocument();
     expect(within(screen.getByRole('list', { name: 'Legend' })).getByText('Police')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'OpenStreetMap' })).toBeInTheDocument();
+  });
+
+  it('marks facilities within 1.5 km as nearby, but not hazards or far ones', async () => {
+    mockApi({
+      'GET /api/community/pins': [200, { pins, sample: true }],
+      'GET /api/services/facilities?lat=-26.2&lon=28.05': [200, {
+        facilities: [],
+        places: [
+          { id: 'node/1', type: 'clinic', name: 'Close Clinic', detail: 'Clinic', lat: -26.205, lon: 28.05 },
+          { id: 'node/2', type: 'library', name: 'Far Library', detail: 'Library', lat: -26.24, lon: 28.05 },
+        ],
+      }],
+    });
+    renderWithProviders(<App />, { route: '/map' });
+    const row = async (name) => (await list().findByText(name)).closest('li');
+    expect(within(await row('Close Clinic')).getByText('Nearby')).toBeInTheDocument();
+    expect(within(await row('Far Library')).queryByText('Nearby')).not.toBeInTheDocument();
+    expect(within(await row('Flooded road')).queryByText('Nearby')).not.toBeInTheDocument();
   });
 
   it('filters by type and keeps the filter in the address', async () => {

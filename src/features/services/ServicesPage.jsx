@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, Building2, Bus, CalendarDays, Droplet, Flame, Hospital, House, Shield, Stethoscope, Trash2, Zap } from 'lucide-react';
+import { Bus, CalendarDays, Droplet, Trash2, Zap } from 'lucide-react';
 import AppBar from '../../components/ui/AppBar';
 import Segmented from '../../components/ui/Segmented';
 import IconChip from '../../components/ui/IconChip';
@@ -15,6 +15,8 @@ import { useWide } from '../../hooks/useWide';
 import WaterQuick from '../water/WaterQuick';
 import RecyclingQuick from '../recycling/RecyclingQuick';
 import RelatedGuides from '../guides/RelatedGuides';
+import PinDot from '../community/PinDot';
+import { NEAR_KM, isNearby } from '../community/pinTypes';
 
 // One entry per tab. `report` is the report form category it links to.
 const SERVICES = [
@@ -40,7 +42,7 @@ const EXTRAS = {
   waste: () => <><RecyclingQuick /><RelatedGuides ids={['g3']} /></>,
 };
 
-const FACILITY_ICONS = { library: BookOpen, water: Droplet, clinic: Stethoscope, hospital: Hospital, shelter: House, police: Shield, fire: Flame };
+const savedTime = (ms) => new Date(ms).toLocaleString('en-ZA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 const StatusCard = ({ service, info, live }) => {
   const status = STATUS[info.status] ?? STATUS.ok;
@@ -77,9 +79,9 @@ const ServicesPage = () => {
   const extras = useWide() && EXTRAS[tab];
   const info = data?.services[tab];
   const live = Boolean(data?.live?.includes(tab));
-  // Live facilities from OpenStreetMap; the demo list if it can't be reached.
-  const facilitiesLive = nearby.status === 'ready' && nearby.data.facilities.length > 0;
-  const facilities = facilitiesLive ? nearby.data.facilities : data?.facilities ?? [];
+  // Live facilities from OpenStreetMap (or the saved copy); the demo list if neither.
+  const facilitiesLive = nearby.status === 'ready' && nearby.data.facilities?.length > 0;
+  const facilities = [...(facilitiesLive ? nearby.data.facilities : data?.facilities ?? [])].sort((a, b) => a.distanceKm - b.distanceKm);
 
   return (
     <>
@@ -130,19 +132,25 @@ const ServicesPage = () => {
               <section aria-labelledby="facilities-title">
                 <h2 id="facilities-title" className="section-label">Nearby Facilities</h2>
                 <ul className="card divide-y divide-slate-100 p-0 sm:p-0">
-                  {facilities.map((f) => (
-                    <li key={f.id} className="flex items-center gap-3 px-4 py-3">
-                      <IconChip icon={FACILITY_ICONS[f.type] ?? Building2} tone="cyan" size="sm" />
+                  {facilities.map((f) => {
+                    const near = isNearby(f.distanceKm);
+                    return (
+                    <li key={f.id} className={`flex items-center gap-3 px-4 py-3 ${near ? 'bg-lime-50' : ''}`}>
+                      <PinDot type={f.type} size={32} ring={near} />
                       <span className="flex-1">
-                        <span className="block font-semibold">{f.url ? <a href={f.url} target="_blank" rel="noreferrer">{f.name}</a> : f.name}</span>
+                        <span className="block font-semibold">
+                          {f.url ? <a href={f.url} target="_blank" rel="noreferrer">{f.name}</a> : f.name}
+                          {near && <Pill tone="green" className="ml-2 align-middle">Nearby</Pill>}
+                        </span>
                         <span className="text-sm text-slate-500">{f.detail}</span>
                       </span>
                       <span className="text-sm font-semibold text-forest-700">{f.distanceKm.toFixed(1)} km</span>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
                 <p className="mt-2 text-xs text-slate-500">
-                  {facilitiesLive && <>Within 3 km of {nearby.place.name} (change it on the weather card). Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors.</>}
+                  {facilitiesLive && <>Within 3 km of {nearby.place.name} (change it on the weather card), nearest first; "Nearby" means within {NEAR_KM} km.{nearby.cached && ` Saved copy from ${savedTime(nearby.savedAt)}${nearby.apiStatus === 'error' ? ', OpenStreetMap could not be reached just now' : ''}.`} Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors.</>}
                   {nearby.status === 'loading' && 'Demo data while live facilities load (the first load can take up to a minute)…'}
                   {nearby.status === 'error' && 'Demo data: OpenStreetMap could not be reached. It retries in a few minutes.'}
                   {nearby.status === 'ready' && !facilitiesLive && `Demo data: nothing mapped within 3 km of ${nearby.place.name} on OpenStreetMap yet.`}
