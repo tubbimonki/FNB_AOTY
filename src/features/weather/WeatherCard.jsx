@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Photo from '../../components/Photo';
 import { pageImages } from '../../assets/images';
 import { PLACES, describeWeather, greenTip } from './weather';
+import { gpsPlace } from './usePlace';
 
 const weekday = (date, i) =>
   i === 0 ? 'Today' : new Date(`${date}T12:00`).toLocaleDateString('en-ZA', { weekday: 'short' });
@@ -17,7 +18,7 @@ const PlacePicker = ({ place, onChange }) => {
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         setLocating(false);
-        onChange({ id: 'gps', name: 'My location', lat: coords.latitude, lon: coords.longitude });
+        onChange(gpsPlace(coords));
       },
       () => setLocating(false), // denied or failed: keep the current place
       { timeout: 10000, maximumAge: 30 * 60 * 1000 },

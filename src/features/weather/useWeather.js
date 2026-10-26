@@ -1,21 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { apiGet } from '../../services/api';
-import { loadJSON, saveJSON } from '../../services/storage';
-import { PLACES, validPlace } from './weather';
+import { usePlace } from './usePlace';
 
-const PLACE_KEY = 'weather:place';
-
-// The chosen place (remembered in localStorage) and its weather from our own
+// The chosen place (shared by every page, see usePlace) and its weather from our own
 // API, which caches Open-Meteo. status is 'loading' | 'ready' | 'error'.
 export function useWeather() {
-  const [place, setPlaceState] = useState(() => validPlace(loadJSON(PLACE_KEY, PLACES[0])));
+  const [place, setPlace] = usePlace();
   const [attempt, setAttempt] = useState(0); // bump to retry
   const [result, setResult] = useState({ key: null, status: 'loading', weather: null });
-
-  const setPlace = useCallback((next) => {
-    setPlaceState(next);
-    saveJSON(PLACE_KEY, next);
-  }, []);
 
   // Each request has a key. A result for an older key (a previous place or
   // attempt) doesn't count, so the page shows "loading" without a setState here.
