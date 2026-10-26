@@ -12,6 +12,7 @@ import { createSawsService } from './saws.js';
 import { mountModules } from './modules/index.js';
 import { createCacheStore } from './cacheStore.js';
 import { createBus } from './bus.js';
+import { upstreamLimiter } from './middleware/rateLimit.js';
 import { newsRouter } from './routes/news.js';
 import { createNewsService } from './news.js';
 
@@ -29,6 +30,8 @@ import { createNewsService } from './news.js';
 // now: the clock, so tests can pretend it's another day.
 // reactionsDb: a separate database for event reactions (defaults to db).
 // sourceDeadlineMs: how long /api/alerts waits for each source (tests shorten it).
+// upstreamPerMinute: requests per visitor per minute on routes that call outside APIs.
+// Outside production, requests from this computer are not counted (dev, Karate).
 export function createApp({
   db,
   jwtSecret,
@@ -45,6 +48,8 @@ export function createApp({
   now,
   reactionsDb = db,
   sourceDeadlineMs,
+  upstreamPerMinute = 120,
+  skipLocalLimit = process.env.NODE_ENV !== 'production',
 }) {
   if (!db) throw new Error('createApp needs a db');
   if (!jwtSecret) throw new Error('createApp needs a jwtSecret');
@@ -56,6 +61,9 @@ export function createApp({
 
   app.use(express.json()); // JSON only, so an HTML form on another site can't post to us
   app.use(cookieParser()); // req.cookies, read by requireAuth
+
+  // One shared budget per visitor for every route that can reach an outside API.
+  app.use(['/api/weather', '/api/news', '/api/alerts', '/api/services'], upstreamLimiter({ perMinute: upstreamPerMinute, skipLocal: skipLocalLimit }));
 
   app.use('/api/health', healthRouter);
   app.use('/api/auth', authRouter({ db, jwtSecret }));

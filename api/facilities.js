@@ -6,13 +6,13 @@ import { createCache, Unavailable } from './cache.js';
 
 // Backup when every Overpass server fails: OSM's own search (Nominatim), same data.
 // Policy: at most 1 request a second and a User-Agent. https://operations.osmfoundation.org/policies/nominatim/
-export const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
+const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 const NOMINATIM_TERMS = ['hospital', 'clinic', 'library', 'police', 'fire station', 'community centre'];
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export const DEFAULT_OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
+const DEFAULT_OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 // Public mirrors, tried in order when the main server is busy or blocks us.
-export const OVERPASS_MIRRORS = [
+const OVERPASS_MIRRORS = [
   DEFAULT_OVERPASS_URL,
   'https://overpass.kumi.systems/api/interpreter',
   'https://overpass.private.coffee/api/interpreter',
@@ -29,7 +29,7 @@ const MAX_MAP = 60; // dots on the map
 export { Unavailable as FacilitiesUnavailable };
 
 // Same rounding as weather.js: about 1 km, shared cache, no exact location kept.
-export const placeKey = (lat, lon) => `${lat.toFixed(2)},${lon.toFixed(2)}`;
+const placeKey = (lat, lon) => `${lat.toFixed(2)},${lon.toFixed(2)}`;
 
 // OSM tags -> our facility types. First match wins.
 const TYPES = [
@@ -65,7 +65,7 @@ export function distanceKm(a, b) {
 }
 
 // Overpass elements -> every place found, nearest first (the map shows these).
-export function toPlaces(raw, from) {
+function toPlaces(raw, from) {
   return (raw.elements ?? [])
     .map((el) => {
       const tags = el.tags ?? {};
@@ -90,7 +90,7 @@ export function toPlaces(raw, from) {
 }
 
 // The short list for the Services page: nearest 2 of each type, 10 at most.
-export function pickNearest(places) {
+function pickNearest(places) {
   const seen = {};
   return places.filter((f) => (seen[f.type] = (seen[f.type] ?? 0) + 1) <= PER_TYPE).slice(0, MAX_RESULTS);
 }
@@ -98,7 +98,7 @@ export function pickNearest(places) {
 export const toFacilities = (raw, from) => pickNearest(toPlaces(raw, from));
 
 // Nominatim results -> the same element shape Overpass uses, so toFacilities reads both.
-export function nominatimToElements(results) {
+function nominatimToElements(results) {
   return results
     .filter((r) => r.osm_type && r.osm_id && r.category && r.type)
     .map((r) => ({

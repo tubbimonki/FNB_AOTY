@@ -6,6 +6,7 @@ import { weatherAlerts } from '../../../shared/weatherAlerts.js';
 import { aqiBand } from '../../airQuality.js';
 import { SAMPLE_ALERTS } from './sampleData.js';
 import { checklistTicks } from './schema.js';
+import { todaySA } from '../../../shared/checks.js';
 
 // Every alert for a place, from four sources, each cached in its own service
 // so this route never adds upstream calls of its own:
@@ -17,7 +18,8 @@ import { checklistTicks } from './schema.js';
 // fall back to sample alerts, and the answer says sample: true.
 // Upstream answers are cached by each service (api_cache table for EskomSePush).
 // The emergency checklist ticks are saved per user in checklist_ticks.
-// TODO(events): emit 'alert.issued' for new severe alerts (push notifications later).
+// A severe alert is announced once a day per place as 'alert.issued' (the bell
+// shows it); saving the checklist says 'checklist.saved' (impact checks badges).
 
 const RANK = { severe: 0, warning: 1, info: 2 };
 const bySeverity = (a, b) => (RANK[a.severity] ?? 3) - (RANK[b.severity] ?? 3);
@@ -29,7 +31,7 @@ const until = (ms) =>
 // How long one source may take before the page is answered without it.
 // The source keeps loading in the background and fills its cache, so the
 // next visitor gets it. SAWS can take a while on a cold start (CAP files).
-export const SOURCE_DEADLINE_MS = 4000;
+const SOURCE_DEADLINE_MS = 4000;
 
 // Runs one source. -> { status: 'live' | 'stale' | 'off' | 'unavailable', alerts }
 async function fromSource(name, load, deadlineMs) {
@@ -79,10 +81,22 @@ export function airAlert({ aqi, pm25 }, where) {
 
 export default {
   name: 'alerts',
-  events: { emits: ['alert.issued'], listens: [] },
+  events: { emits: ['alert.issued', 'checklist.saved'], listens: [] },
 
-  router({ db, jwtSecret, weather, eskom, airQuality, saws, sourceDeadlineMs = SOURCE_DEADLINE_MS }) {
+  router({ db, jwtSecret, bus, weather, eskom, airQuality, saws, sourceDeadlineMs = SOURCE_DEADLINE_MS }) {
     const router = Router();
+    const announced = new Set(); // "day|place|title", so each severe alert is said once
+
+    const announceSevere = async (alerts, place) => {
+      const day = todaySA();
+      for (const alert of alerts.filter((a) => a.severity === 'severe')) {
+        const key = `${day}|${place}|${alert.title}`;
+        if (announced.has(key)) continue;
+        if (announced.size > 500) announced.clear(); // keep memory small
+        announced.add(key);
+        await bus.emit('alert.issued', { alert, place, day });
+      }
+    };
     const auth = requireAuth({ db, jwtSecret });
     const known = new Set(CHECKLIST.map((item) => item.id));
 
@@ -104,6 +118,7 @@ export default {
         await tx.delete(checklistTicks).where(eq(checklistTicks.userId, req.user.id));
         if (keep.length) await tx.insert(checklistTicks).values(keep.map((itemId) => ({ userId: req.user.id, itemId })));
       });
+      await bus.emit('checklist.saved', { userId: req.user.id, ticked: keep });
       res.json({ value: keep });
     });
 
@@ -165,6 +180,7 @@ export default {
       const alerts = [...official.alerts, ...wx.alerts, ...power.alerts, ...air.alerts]
         .map((alert) => ({ kind: 'alert', ...alert }))
         .sort(bySeverity);
+      await announceSevere(alerts, place);
       res.json({ alerts, sources, sample: false });
     });
 

@@ -1,89 +1,28 @@
-# CI + deploy for the FNB AOTY climate app.
-#
-# A "workflow" is a recipe GitHub runs for you on its own machines.
-# This one has two jobs:
-#   1. build  - install, lint and build the app. Runs on every push and
-#               pull request, so a broken change shows a red X right away.
-#   2. deploy - publish the built site to GitHub Pages. Only runs on main,
-#               and only if build passed.
-#
-# One-time setup on GitHub: Settings -> Pages -> Source -> "GitHub Actions".
+# CI for the Eco 5.0 climate app: install, lint, test and build on every
+# push and pull request. Deploying happens on Render (render.yaml), because
+# GitHub Pages only hosts static files and login needs the Express server.
 
-name: CI and deploy
+name: CI
 
-# "on" = what starts the workflow.
 on:
   push:
     branches: [main]
   pull_request:
-  # Adds a "Run workflow" button on the Actions tab, handy for testing.
   workflow_dispatch:
 
-# The automatic GITHUB_TOKEN gets only what we list here.
-# Pages deploys need to write to Pages and prove who they are (id-token).
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-# If you push twice quickly, cancel the older deploy instead of racing it.
-concurrency:
-  group: pages-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   build:
-    # A fresh Linux VM every run. Nothing carries over from your laptop,
-    # which is exactly why CI catches "works on my machine" bugs.
     runs-on: ubuntu-latest
     steps:
-      # 1. Get a copy of the repo onto the VM.
       - uses: actions/checkout@v4
-
-      # 2. Install Node. cache: npm reuses downloaded packages between runs,
-      #    keyed on package-lock.json, so installs get faster.
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-
-      # 3. npm ci (not npm install): installs exactly what package-lock.json
-      #    says and fails if package.json and the lock file disagree.
       - run: npm ci
-
-      # 4. Lint only our code. Without paths, oxlint also scans node_modules.
-      - run: npx oxlint src api
+      - run: npm run lint   # src, api and shared
       - run: npm test
-      # 5. Build. GitHub Pages serves the site at
-      #    https://<user>.github.io/<repo-name>/ (not at the root), so we tell
-      #    Vite that base path. Passing it on the command line means
-      #    vite.config.js stays untouched and `npm run dev` still works at /.
-      - run: npm run build -- --base=/${{ github.event.repository.name }}/
-
-      # 6. Pages has no server-side routing. Visiting /about directly would
-      #    404, so we make the 404 page the app itself and React Router
-      #    takes it from there.
-      - run: cp dist/index.html dist/404.html
-
-      # 7. Hand the dist folder to the deploy job. Jobs run on separate VMs,
-      #    so files have to be passed along as an "artifact".
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-  deploy:
-    # Wait for build, and skip on pull requests (only main goes live).
-    needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    # Shows up under the repo's "Environments", with the live URL attached.
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
-
-# Not deployed here: api/index.js. Pages only hosts static files, so the
-# Express API would need a host like Render or Railway. Add that when the
-# frontend actually calls the API.
+      - run: npm run build

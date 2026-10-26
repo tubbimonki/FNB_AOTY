@@ -1,5 +1,5 @@
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { BookOpen, CloudRain, Droplet, Leaf, Map as MapIcon, Newspaper, Sprout, Wallet, Bell } from 'lucide-react';
+import { BookOpen, CloudRain, Crown, Droplet, Leaf, Map as MapIcon, Newspaper, Sprout, Wallet } from 'lucide-react';
 import { useAuth } from '../auth/useAuth';
 import { useNews } from '../news/useNews';
 import { guideItems, latestGuides } from '../guides/guideItems';
@@ -9,6 +9,8 @@ import { useWeather } from '../weather/useWeather';
 import { describeWeather } from '../weather/weather';
 import { useAlerts } from '../alerts/useAlerts';
 import { useWide } from '../../hooks/useWide';
+import { useAwards } from '../impact/useAwards';
+import NotificationBell from '../notifications/NotificationBell';
 import WaterQuick from '../water/WaterQuick';
 import PowerQuick from '../services/PowerQuick';
 import EventsQuick from '../community/EventsQuick';
@@ -20,27 +22,34 @@ import { APP_NAME } from '../../brand';
 import MiniWidget from './MiniWidget';
 import { greeting } from './greeting';
 
-// Photo header: app name, a bell for alerts, the greeting and today's weather.
-const Hero = ({ name, place, weather, status, alertCount }) => {
+// Photo header: app name, the notification bell, the greeting (with Premium
+// when it's running) and today's weather.
+const Hero = ({ name, place, weather, status, alerts, premiumUntil }) => {
   const now = weather && describeWeather(weather.current.code, weather.current.isDay);
   const today = weather?.days[0];
 
+  // The photo is clipped in its own layer, so the bell's panel can hang below the hero.
   return (
-    <section className="relative isolate overflow-hidden rounded-b-3xl text-white shadow-md lg:mt-6 lg:rounded-3xl">
-      <Photo image={pageImages.dashboardHero} background className="absolute inset-0 -z-20 h-full w-full object-cover" />
-      <div className="absolute inset-0 -z-10 bg-linear-to-b from-forest-950/60 to-forest-900/90" />
+    <section className="relative isolate z-10 rounded-b-3xl text-white shadow-md lg:mt-6 lg:rounded-3xl">
+      <div className="absolute inset-0 -z-10 overflow-hidden rounded-b-3xl lg:rounded-3xl">
+        <Photo image={pageImages.dashboardHero} background className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-linear-to-b from-forest-950/60 to-forest-900/90" />
+      </div>
 
       <div className="px-5 pt-5 pb-6 sm:px-8 sm:pt-7 sm:pb-8">
         <div className="mb-8 flex items-center justify-between">
           <p className="flex items-center gap-2 font-semibold"><Sprout className="size-5 text-sprout" aria-hidden="true" />{APP_NAME}</p>
-          <Link to="/alerts" aria-label={`Alerts (${alertCount})`} className="relative grid size-11 place-items-center rounded-full text-white hover:bg-white/10">
-            <Bell className="size-5" aria-hidden="true" />
-            {alertCount > 0 && <span className="absolute top-2.5 right-2.5 size-2.5 rounded-full bg-amber-400 ring-2 ring-forest-900" />}
-          </Link>
+          <NotificationBell alerts={alerts} place={place.name} />
         </div>
 
         <h1 className="text-2xl text-white sm:text-3xl">{greeting()}{name ? `, ${name}` : ''}!</h1>
         <p className="mb-5 text-forest-100">Stay prepared. Make sustainable choices.</p>
+        {premiumUntil && (
+          <Link to="/impact" className="-mt-2 mb-4 inline-flex items-center gap-1.5 rounded-full bg-amber-300/90 px-3 py-1 text-xs font-bold text-forest-950 no-underline hover:no-underline">
+            <Crown className="size-3.5" aria-hidden="true" />
+            Premium until {new Date(premiumUntil).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })}
+          </Link>
+        )}
 
         <Link
           to="/alerts"
@@ -91,6 +100,7 @@ const DashboardPage = () => {
   const guides = latestGuides(guideItems);
   const [newestGuide] = guides;
   const wide = useWide();
+  const { premiumUntil } = useAwards();
 
   // Old links like /dashboard?view=guides go to the dedicated page.
   const oldView = searchParams.get('view');
@@ -103,7 +113,7 @@ const DashboardPage = () => {
   return (
     <main className="wrap lg:px-6 2xl:grid 2xl:grid-cols-[minmax(0,1fr)_22rem] 2xl:gap-x-6 3xl:grid-cols-[minmax(0,1fr)_24rem]">
       <div className="min-w-0">
-        <Hero name={user?.name} alertCount={alerts.length} {...weather} />
+        <Hero name={user?.name} alerts={alerts} premiumUntil={premiumUntil} {...weather} />
 
         <div className="space-y-7 px-4 py-5 sm:px-6 lg:px-0">
           {alerts[0] && <AlertCard alert={alerts[0]} compact />}
@@ -127,7 +137,7 @@ const DashboardPage = () => {
                 icon={BookOpen}
                 tone="amber"
                 title="Guides"
-                summary={newestGuide ? `New: ${newestGuide.topic}, ${newestGuide.minutes} min` : 'Coming soon'}
+                summary={`New: ${newestGuide.topic}, ${newestGuide.minutes} min`}
               />
               <MiniWidget
                 to="/tracker"

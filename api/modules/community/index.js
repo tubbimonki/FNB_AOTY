@@ -7,8 +7,9 @@ import { reports } from './schema.js';
 
 // Map pins, local updates and residents' reports (reports table).
 // Community events have their own module (api/modules/events).
-// TODO(events): emit 'report.created' so impact can award points (guide 2).
-// TODO(moderation): new reports should show as unverified until checked.
+// A new report is announced as 'report.created' (impact gives points, the bell says thanks).
+// Reports start as status 'received' (unverified) and only show on the map as
+// "Report (unverified)" pins; checking them is a job for a future admin page.
 const MAX_PER_USER = 20;
 const MAP_PINS = 300; // newest reports shown on the map
 const roundSpot = (n) => (n === undefined ? null : Math.round(n * 1000) / 1000);
@@ -27,7 +28,7 @@ export default {
   name: 'community',
   events: { emits: ['report.created'], listens: [] },
 
-  router({ db, jwtSecret }) {
+  router({ db, jwtSecret, bus }) {
     const router = Router();
     const auth = requireAuth({ db, jwtSecret });
 
@@ -56,6 +57,7 @@ export default {
         // 3 decimals is about 100 m: close enough to find a pothole, not someone's house.
         .values({ userId: req.user.id, category, description: description.trim(), lat: roundSpot(lat), lon: roundSpot(lon) })
         .returning();
+      await bus.emit('report.created', { userId: req.user.id, reportId: row.id, category: row.category });
       res.status(201).json({ report: toReport(row) });
     });
 

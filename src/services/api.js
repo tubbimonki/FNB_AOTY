@@ -6,7 +6,7 @@ const BASE = import.meta.env.VITE_API_URL ?? '/api';
 
 // Thrown for any non-2xx answer. `status` lets callers tell 401 from 409 etc.,
 // and `message` is the API's { error } text, safe to show to the user.
-export class ApiError extends Error {
+class ApiError extends Error {
   constructor(status, message) {
     super(message);
     this.name = 'ApiError';

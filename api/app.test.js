@@ -107,3 +107,25 @@ describe('serving the built site (staticDir)', () => {
     expect(await res.json()).toEqual({ error: 'Not found' });
   });
 });
+
+describe('rate limit on routes that call outside APIs', () => {
+  let api;
+
+  beforeAll(async () => {
+    api = await startTestServer({ upstreamPerMinute: 3, skipLocalLimit: false });
+  });
+
+  afterAll(() => api.close());
+
+  it('answers 429 after the per-minute budget, shared across those routes', async () => {
+    const codes = [];
+    for (const path of ['/api/news', '/api/news', '/api/weather?lat=x', '/api/news']) {
+      codes.push((await fetch(`${api.baseUrl}${path}`)).status);
+    }
+    expect(codes).toEqual([200, 200, 400, 429]);
+  });
+
+  it('leaves login and health alone', async () => {
+    expect((await fetch(`${api.baseUrl}/api/health`)).status).toBe(200);
+  });
+});

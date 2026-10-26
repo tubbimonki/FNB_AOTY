@@ -1,6 +1,6 @@
 import { useSyncedList } from '../../hooks/useSynced';
 
-export const WATER_KEY = 'water:logs';
+const WATER_KEY = 'water:logs';
 
 // Water logs, saved like Green Wallet's useLogs (Postgres when logged in,
 // /api/eco/water/logs). Each log is { id, date, use, litres }.

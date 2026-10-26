@@ -22,3 +22,15 @@ export const footprints = pgTable('footprints', {
   totalT: doublePrecision('total_t').notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+// Small per-user settings, e.g. key 'recyclingDay' -> 2 (Tuesday).
+export const ecoPrefs = pgTable(
+  'eco_prefs',
+  {
+    userId: userId(),
+    key: text('key').notNull(),
+    value: jsonb('value').notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.key] })],
+);

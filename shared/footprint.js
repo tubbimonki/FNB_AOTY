@@ -3,7 +3,7 @@
 // Every factor has a source in the write-up; change one line to update it.
 
 // kg CO2e per unit.
-export const FACTORS = {
+const FACTORS = {
   gridKgPerKWh: 0.95,      // SA grid, mostly coal (same as Green Wallet)
   carKgPerKm: 0.17,        // average petrol car
   busKgPerKm: 0.1,         // bus or minibus taxi, per passenger

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { describeWeather, greenTip, weatherAlerts } from './weather';
-import { mixHighlights } from '../dashboard/highlightItems';
 
 const day = (overrides) => ({ date: '2026-10-25', code: 1, maxC: 25, minC: 12, rainChance: 0, uvMax: 5, ...overrides });
 const current = { tempC: 22, feelsLikeC: 22, humidity: 40, windKph: 5, code: 1, isDay: true };
@@ -27,9 +26,5 @@ describe('weather helpers', () => {
   it('picks a tip that fits the weather', () => {
     expect(greenTip({ current, days: [day({ rainChance: 80 })] })).toMatch(/Rain/);
     expect(greenTip({ current: { ...current, tempC: 31 }, days: [day()] })).toMatch(/fan/);
-  });
-
-  it('alternates alerts and community items', () => {
-    expect(mixHighlights(['a1', 'a2', 'a3'], ['c1'])).toEqual(['a1', 'c1', 'a2', 'a3']);
   });
 });

@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 import { createCache } from './cache.js';
 import { newsSnapshot } from '../shared/newsSnapshot.js';
 
-export const DEFAULT_FEEDS = [
+const DEFAULT_FEEDS = [
   {
     name: 'Google News (South Africa)',
     region: 'za',

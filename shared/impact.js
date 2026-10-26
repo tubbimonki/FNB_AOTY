@@ -8,8 +8,8 @@ export const POINTS = {
   footprint: 100,      // footprint questionnaire done
 };
 
-export const POINTS_PER_LEVEL = 500;
-export const LEVEL_TITLES = ['Seedling', 'Climate Hero', 'Green Guardian', 'Community Champion', 'Earth Keeper'];
+const POINTS_PER_LEVEL = 500;
+const LEVEL_TITLES = ['Seedling', 'Climate Hero', 'Green Guardian', 'Community Champion', 'Earth Keeper'];
 
 // Each badge: how far along you are (have) and what unlocks it (need).
 const BADGES = [

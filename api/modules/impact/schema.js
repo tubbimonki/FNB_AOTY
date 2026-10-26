@@ -16,3 +16,15 @@ export const impactAwards = pgTable(
   },
   (t) => [primaryKey({ columns: [t.userId, t.source] })],
 );
+
+// Badges and levels already reached, so 'badge.unlocked' is announced once.
+// badge is a badge id ('water-saver') or a level ('level-2').
+export const impactBadges = pgTable(
+  'impact_badges',
+  {
+    userId: userId(),
+    badge: text('badge').notNull(),
+    unlockedAt: timestamp('unlocked_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.badge] })],
+);

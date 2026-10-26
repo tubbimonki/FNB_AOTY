@@ -3,13 +3,19 @@ import { and, count, desc, eq } from 'drizzle-orm';
 import { requireAuth } from '../../middleware/requireAuth.js';
 import { estimateFootprint } from '../../../shared/footprint.js';
 import { isClientId, isDay } from '../../../shared/checks.js';
-import { footprints, waterLogs } from './schema.js';
+import { ecoPrefs, footprints, waterLogs } from './schema.js';
 
 // Footprint estimates and water logs, saved per user in Postgres.
 // Water logs sync like Green Wallet's (see api/modules/wallet).
-// TODO(events): emit 'water.logged' and 'footprint.saved' for impact points.
+// New water logs are announced as 'water.logged' { userId, logs }, a saved
+// questionnaire as 'footprint.saved' { userId, total }.
 const MAX_PER_USER = 500;
 const MAX_SYNC = 500;
+
+// Settings a member can save, and what a valid value looks like.
+const PREFS = {
+  recyclingDay: (v) => Number.isInteger(v) && v >= 0 && v <= 6, // 0 = Sunday
+};
 
 // A water log from the browser -> a row, or an error message.
 // Older clients sent no id, so the server makes one.
@@ -27,7 +33,7 @@ export default {
   name: 'eco',
   events: { emits: ['water.logged', 'footprint.saved'], listens: [] },
 
-  router({ db, jwtSecret }) {
+  router({ db, jwtSecret, bus }) {
     const router = Router();
     const auth = requireAuth({ db, jwtSecret });
 
@@ -56,7 +62,26 @@ export default {
       }
       const row = { userId: req.user.id, answers, totalT: estimateFootprint(answers).total, updatedAt: new Date() };
       const [saved] = await db.insert(footprints).values(row).onConflictDoUpdate({ target: footprints.userId, set: row }).returning();
+      await bus.emit('footprint.saved', { userId: req.user.id, total: saved.totalT });
       res.json({ value: toSaved(saved) });
+    });
+
+    // GET /api/eco/prefs/recyclingDay -> { value } (null if never saved)
+    // PUT /api/eco/prefs/recyclingDay { value: 5 } -> { value }
+    router.get('/prefs/:key', auth, async (req, res) => {
+      if (!PREFS[req.params.key]) return res.status(404).json({ error: 'Unknown setting' });
+      const [row] = await db.select().from(ecoPrefs).where(and(eq(ecoPrefs.userId, req.user.id), eq(ecoPrefs.key, req.params.key)));
+      res.json({ value: row?.value ?? null });
+    });
+
+    router.put('/prefs/:key', auth, async (req, res) => {
+      const valid = PREFS[req.params.key];
+      if (!valid) return res.status(404).json({ error: 'Unknown setting' });
+      const value = req.body?.value;
+      if (!valid(value)) return res.status(400).json({ error: 'That value is not allowed' });
+      const row = { userId: req.user.id, key: req.params.key, value, updatedAt: new Date() };
+      await db.insert(ecoPrefs).values(row).onConflictDoUpdate({ target: [ecoPrefs.userId, ecoPrefs.key], set: row });
+      res.json({ value });
     });
 
     // POST /api/eco/water/logs { id?, litres, use, date } -> 201 { log }
@@ -66,7 +91,8 @@ export default {
       if ((await countFor(req.user.id)) >= MAX_PER_USER) {
         return res.status(429).json({ error: `You can keep ${MAX_PER_USER} water logs` });
       }
-      await db.insert(waterLogs).values(row).onConflictDoNothing();
+      const added = await db.insert(waterLogs).values(row).onConflictDoNothing().returning();
+      if (added.length) await bus.emit('water.logged', { userId: req.user.id, logs: added.map(toLog) });
       res.status(201).json({ log: toLog(row) });
     });
 
@@ -83,7 +109,8 @@ export default {
       }
       const room = MAX_PER_USER - (await countFor(req.user.id));
       const rows = incoming.map((log) => toRow(req.user.id, log)).filter((row) => typeof row !== 'string').slice(0, Math.max(room, 0));
-      if (rows.length) await db.insert(waterLogs).values(rows).onConflictDoNothing();
+      const added = rows.length ? await db.insert(waterLogs).values(rows).onConflictDoNothing().returning() : [];
+      if (added.length) await bus.emit('water.logged', { userId: req.user.id, logs: added.map(toLog) });
       res.json({ logs: await listFor(req.user.id) });
     });
 

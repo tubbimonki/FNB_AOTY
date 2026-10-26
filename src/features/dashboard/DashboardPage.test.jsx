@@ -70,7 +70,27 @@ describe('Dashboard (/dashboard)', () => {
     });
     renderAt('/dashboard');
     expect(await screen.findByRole('heading', { name: 'Heavy rain warning' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Alerts (2)' })).toBeInTheDocument();
+    // The bell counts the warning, not the info notice.
+    expect(screen.getByRole('button', { name: 'Notifications (1)' })).toBeInTheDocument();
+  });
+
+  it('opens the bell: live warnings plus updates from the server, then marks them seen', async () => {
+    const user = userEvent.setup();
+    mockApi({
+      'GET /api/notifications?place=Johannesburg': [200, { items: [
+        { id: 1, kind: 'badge', title: 'Badge unlocked: Prepared', body: 'Nice work.', href: '/impact', forYou: true, createdAt: new Date().toISOString() },
+      ] }],
+      'GET /api/impact/awards': [200, { awards: [], points: 0, premiumUntil: new Date(Date.now() + 86_400_000 * 3).toISOString() }],
+    });
+    renderAt('/dashboard');
+    const bell = await screen.findByRole('button', { name: 'Notifications (1)' });
+    expect(screen.getByRole('link', { name: /Premium until/ })).toHaveAttribute('href', '/impact');
+
+    await user.click(bell);
+    const panel = within(screen.getByRole('dialog', { name: 'Notifications' }));
+    expect(panel.getByRole('link', { name: /Badge unlocked: Prepared/ })).toHaveAttribute('href', '/impact');
+    expect(panel.getByText('No warnings for Johannesburg. 🌤️')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Notifications (0)' })).toBeInTheDocument();
   });
 
   it('says so when the weather cannot load', async () => {

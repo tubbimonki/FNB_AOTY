@@ -8,7 +8,7 @@ import { walletLogs } from './schema.js';
 // Green Wallet logs, saved per user in the wallet_logs table.
 // The browser keeps a copy too (works offline and for guests) and sends
 // anything it saved offline to POST /sync, which skips logs it already has.
-// TODO(events): emit 'log.created' so impact can award points as it happens.
+// Every new log is announced as 'log.created' { userId, logs } (a sync can bring many).
 const MAX_PER_USER = 2000;
 const MAX_SYNC = 500;
 
@@ -27,7 +27,7 @@ export default {
   name: 'wallet',
   events: { emits: ['log.created'], listens: [] },
 
-  router({ db, jwtSecret }) {
+  router({ db, jwtSecret, bus }) {
     const router = Router();
     router.use(requireAuth({ db, jwtSecret })); // every route here is personal
 
@@ -50,7 +50,8 @@ export default {
         return res.status(429).json({ error: `You can keep ${MAX_PER_USER} logs` });
       }
       // Same id twice (a retry) does nothing instead of failing.
-      await db.insert(walletLogs).values(row).onConflictDoNothing();
+      const added = await db.insert(walletLogs).values(row).onConflictDoNothing().returning();
+      if (added.length) await bus.emit('log.created', { userId: req.user.id, logs: added.map(toLog) });
       res.status(201).json({ log: toLog(row) });
     });
 
@@ -63,7 +64,8 @@ export default {
       }
       const room = MAX_PER_USER - (await countFor(req.user.id));
       const rows = incoming.map((log) => toRow(req.user.id, log)).filter((row) => typeof row !== 'string').slice(0, Math.max(room, 0));
-      if (rows.length) await db.insert(walletLogs).values(rows).onConflictDoNothing();
+      const added = rows.length ? await db.insert(walletLogs).values(rows).onConflictDoNothing().returning() : [];
+      if (added.length) await bus.emit('log.created', { userId: req.user.id, logs: added.map(toLog) });
       res.json({ logs: await listFor(req.user.id) });
     });
 
