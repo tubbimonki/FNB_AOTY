@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import jwt from 'jsonwebtoken';
 
 export const COOKIE_NAME = 'session';
@@ -6,10 +7,13 @@ const MAX_AGE_SECONDS = 7 * 24 * 60 * 60; // 7 days
 // The token says "user <id> with this email, valid until <exp>", signed with the secret.
 // The email matters on Render: its disk is wiped on restart, so ids start again
 // at 1 and an old token must not log in as the new user 1.
+// jwtid (jti) is a random id for this one token, so logout can revoke it
+// (see revokeToken) without logging you out on your other devices.
 export function signToken(user, secret) {
   return jwt.sign({ sub: String(user.id), email: user.email }, secret, {
     algorithm: 'HS256',
     expiresIn: MAX_AGE_SECONDS,
+    jwtid: randomUUID(),
   });
 }
 

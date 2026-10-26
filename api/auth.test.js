@@ -114,6 +114,33 @@ describe('GET /api/auth/me (requireAuth)', () => {
     expect(res.body.error).toBeTruthy();
   });
 
+  it('refuses a copy of the cookie after logout (the token is revoked)', async () => {
+    await client.request('POST', '/api/auth/register', tubbi);
+    const copy = createClient(api.baseUrl);
+    copy.cookie = client.cookie; // e.g. another tab, or a stolen cookie
+    expect((await copy.request('GET', '/api/auth/me')).status).toBe(200);
+
+    await client.request('POST', '/api/auth/logout');
+    const res = await copy.request('GET', '/api/auth/me');
+    expect(res.status).toBe(401);
+    expect(res.body.error).toMatch(/log in again/);
+  });
+
+  it('keeps other sessions of the same account working after one logs out', async () => {
+    await client.request('POST', '/api/auth/register', tubbi);
+    const phone = createClient(api.baseUrl);
+    await phone.request('POST', '/api/auth/login', { email: tubbi.email, password: tubbi.password });
+
+    await client.request('POST', '/api/auth/logout');
+    expect((await phone.request('GET', '/api/auth/me')).status).toBe(200);
+  });
+
+  it('logs out fine with no cookie or a junk one', async () => {
+    expect((await client.request('POST', '/api/auth/logout')).status).toBe(204);
+    client.cookie = 'session=not-a-token';
+    expect((await client.request('POST', '/api/auth/logout')).status).toBe(204);
+  });
+
   it('returns 401 after logout', async () => {
     await client.request('POST', '/api/auth/register', tubbi);
     await client.request('POST', '/api/auth/logout');
