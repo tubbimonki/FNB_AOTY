@@ -9,6 +9,9 @@ a visitor sees it.
 | File | What it covers |
 | --- | --- |
 | `api/health.feature` | `GET /api/health` on Express and through the Vite proxy, speed, unknown routes |
+| `api/events.feature` | events list and details, attending earns the reward and cancelling takes it back, reactions toggle and earn 2 points, both need a login |
+| `api/news.feature` | `GET /api/news` always answers with stories that link to their real source |
+| `api/auth.feature` | logout revokes the token (a copied cookie is refused), safety headers |
 | `api/modules.feature` | `GET /api/features`, sample data from each module, server-side footprint, reports need a login |
 | `ui/routing.feature` | `/` redirects to `/home`, header/main/footer landmarks, the 404 page |
 | `ui/header.feature` | desktop: logo, the five tabs, active tab (Eco stays lit on `/tracker`), Log in, Home bounce to login, tab bar hidden |
@@ -19,6 +22,8 @@ a visitor sees it.
 | `ui/guides-section.feature` | news card and guides card each link 3 items into the dashboard, side-by-side vs stacked layout |
 | `ui/benefits-section.feature` | heading and the four benefits |
 | `ui/footer.feature` | copyright lines, the About / Features / Benefits links and where they go, `API: ok`, `API: offline` with a faked dead API, footer on other pages |
+| `ui/motion.feature` | cards below the fold wait and fade in when scrolled to (`data-reveal`), nothing on screen is ever hidden, every feature card opens its tool |
+| `ui/wide-screen.feature` | at 2560px the Eco page fills the width and adds quick tools, Services shows water tools on the Water tab; a 1366px laptop is unchanged |
 | `ui/images.feature` | every photo described or marked decorative, fallback box when photos fail, every Unsplash URL in `images.js` is live (`@network`) |
 | `mocks/*.feature` | fake responses used by the footer and image tests (tagged `@ignore`, never run on their own) |
 
