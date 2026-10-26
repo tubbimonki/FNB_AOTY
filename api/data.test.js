@@ -38,6 +38,10 @@ describe('saved per user in Postgres', () => {
     expect((await thandi.request('POST', '/api/wallet/logs', { id: 'b', actionId: 'fly-to-mars', date: '2026-10-25' })).status).toBe(400);
     expect((await thandi.request('POST', '/api/wallet/logs', { id: 'b', actionId: 'cold-wash', date: '2026-02-31' })).status).toBe(400);
     expect((await thandi.request('POST', '/api/wallet/logs', { id: 'bad id!', actionId: 'cold-wash', date: '2026-10-25' })).status).toBe(400);
+    const future = await thandi.request('POST', '/api/wallet/logs', { id: 'c', actionId: 'cold-wash', date: '2099-01-01' });
+    expect(future.status).toBe(400);
+    expect(future.body.error).toMatch(/no later than today/);
+    expect((await thandi.request('POST', '/api/eco/water/logs', { id: 'w', litres: 10, date: '2099-01-01' })).status).toBe(400);
   });
 
   it('keeps each person\'s logs apart, even with the same id', async () => {
@@ -160,7 +164,23 @@ describe('api_cache table', () => {
     expect(calls).toBe(2);
   });
 
-  it('never breaks the page when the table fails', async () => {
+  it('keeps facilities for a month but other answers for a week', async () => {
+    const db = await testDatabase();
+    const day = 24 * 60 * 60 * 1000;
+    const old = createCacheStore(db);
+    await old.save('weather:a', { value: 1, fetchedAt: Date.now() }); // first save sweeps; later ones in the hour don't
+    await old.save('facilities:a', { value: 1, fetchedAt: Date.now() - 10 * day });
+    await old.save('facilities:b', { value: 1, fetchedAt: Date.now() - 40 * day });
+    await old.save('eskom:a', { value: 1, fetchedAt: Date.now() - 10 * day });
+
+    const store = createCacheStore(db);
+    await store.save('news:a', { value: 1, fetchedAt: Date.now() }); // sweeps
+    expect(await store.load('facilities:a')).not.toBeNull();
+    expect(await store.load('facilities:b')).toBeNull();
+    expect(await store.load('eskom:a')).toBeNull();
+  });
+
+    it('never breaks the page when the table fails', async () => {
     const broken = { select: () => { throw new Error('db down'); }, insert: () => { throw new Error('db down'); } };
     const cache = createCache({ staleMs: 100, cooldownMs: 0, store: createCacheStore(broken), name: 'x' });
     expect((await cache.get('k', 10, async () => 'fresh')).value).toBe('fresh');
