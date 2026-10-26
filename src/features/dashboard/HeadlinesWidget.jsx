@@ -1,16 +1,15 @@
 import { Link } from 'react-router-dom';
 
-// A small numbered list of headlines for the sidebar. It knows nothing about
-// news or guides: the dashboard passes a title, the items, and `linkTo`,
-// which turns an item into where clicking it should go.
+// Numbered headline list for the sidebar; `linkTo(item)` gives each item's
+// link, so the same widget serves news and guides. Scrolls past its height limit.
 const HeadlinesWidget = ({ title, items, linkTo }) => {
   if (items.length === 0) return null;
   const titleId = `${title.toLowerCase().replaceAll(' ', '-')}-title`;
 
   return (
     <section aria-labelledby={titleId} className="card">
-      <h3 id={titleId} className="mb-3 text-lg">{title}</h3>
-      <ol className="space-y-3">
+      <h2 id={titleId} className="mb-3 text-lg">{title}</h2>
+      <ol className="scroll-box space-y-3" tabIndex={0} aria-label={title}>
         {items.map((item, index) => (
           <li key={item.id} className="flex gap-3">
             <span className="w-4 shrink-0 text-lg font-bold text-moss">{index + 1}</span>

@@ -1,0 +1,36 @@
+# Render Blueprint: one web service that builds the site and runs Express,
+# which serves both the site and /api from the same origin.
+# Render dashboard -> New -> Blueprint -> pick this repo.
+services:
+  - type: web
+    name: fnb-aoty
+    runtime: node
+    plan: free
+    # --include=dev: Vite is a devDependency, and NODE_ENV=production skips those.
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
+      - key: NODE_VERSION
+        value: "22"
+      - key: JWT_SECRET
+        generateValue: true
+      # Secrets and ids you fill in on the Render dashboard (sync: false = not in git).
+      # DATABASE_URL: the Neon connection string. Without it data is lost on restart.
+      - key: DATABASE_URL
+        sync: false
+      - key: ESKOMSEPUSH_TOKEN
+        sync: false
+      - key: ESKOMSEPUSH_SCHEDULE
+        sync: false
+      - key: ESKOMSEPUSH_AREA
+        sync: false
+      # A ready-made login for judges and demos, made at start if missing.
+      - key: DEMO_EMAIL
+        sync: false
+      - key: DEMO_PASSWORD
+        sync: false

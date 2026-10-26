@@ -1,17 +1,35 @@
 @ui
-Feature: Footer and the API status line
+Feature: Footer, the info-page links and the API status line
 
-  The footer asks GET /api/health when the page loads and shows the answer.
-  These scenarios need the API running (npm run api) except the offline one,
-  which fakes a dead API with Karate's request intercept.
+  The footer holds the links to About, Features and Benefits (the tabs are kept
+  for the app itself) and asks GET /api/health when the page loads, then shows the
+  answer. The API scenarios need the API running (npm run api) except the
+  offline one, which fakes a dead API with Karate's request intercept.
 
   Background:
     * driver baseUrl + '/home'
     * waitFor('footer')
 
   Scenario: The footer shows the copyright and support lines
-    * match text('footer') contains '© 2026 Climate Awareness App. All rights reserved.'
+    * match text('footer') contains '© 2026 Eco 5.0. All rights reserved.'
     * match text('footer') contains 'Support organizations working on climate solutions.'
+
+  Scenario: The info pages are linked from the footer, in order
+    * def labels = scriptAll('footer li a', '_.textContent.trim()')
+    * match labels == ['About', 'Features', 'Benefits']
+    * def links = scriptAll('footer li a', "_.getAttribute('href')")
+    * match links == ['/about', '/features', '/benefits']
+
+  Scenario Outline: The <label> link opens <path>
+    When click("footer a[href='<path>']")
+    Then waitForUrl('<path>')
+    And waitForText('main h1', '<heading>')
+
+    Examples:
+      | label    | path      | heading                                    |
+      | About    | /about    | About                                      |
+      | Features | /features | Our Features                               |
+      | Benefits | /benefits | Communal Benefits of a Healthy Environment |
 
   Scenario: With the API running, the footer says API: ok
     * waitForText('footer', 'API: ok')

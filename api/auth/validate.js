@@ -1,5 +1,4 @@
-// Server-side checks. The form checks too, but that is only for comfort:
-// anyone can skip the form and call the API directly.
+// Server-side checks. The form checks too, but anyone can skip the form.
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

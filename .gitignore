@@ -29,5 +29,5 @@ dist-ssr
 .env
 coverage
 
-# Local SQLite database (users, logs). Never commit real user data.
+# Local database (PGlite, and the old SQLite file). Never commit real user data.
 data/

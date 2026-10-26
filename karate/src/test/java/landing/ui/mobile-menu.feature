@@ -1,45 +1,51 @@
 @ui @mobile
-Feature: Mobile menu (phone-width window)
+Feature: Phone tab bar (phone-width window)
 
-  Below 1024px the nav links hide behind the ☰ button. The button tells
-  screen readers what it does with aria-label and aria-expanded.
+  Below 1024px the header is hidden and a tab bar sits at the bottom of the
+  screen, like a native app. It is hidden on the splash and login screens.
 
   Background:
-    * driver baseUrl + '/home'
+    * driver baseUrl + '/eco'
     * driver.emulateDevice(phone.width, phone.height, phone.userAgent)
-    * def menuButton = "button[aria-controls='main-nav']"
-    * def navVisible = function(){ return script('#main-nav', '_.offsetParent !== null') }
-    * waitFor(menuButton)
+    * def tabBar = "nav[aria-label='Tabs']"
+    * waitFor(tabBar)
 
-  Scenario: The menu starts closed
-    * match navVisible() == false
-    * match attribute(menuButton, 'aria-expanded') == 'false'
-    * match attribute(menuButton, 'aria-label') == 'Open menu'
+  Scenario: The tab bar shows the five tabs and the header is hidden
+    # The bar is position: fixed, so check its display (offsetParent is always null for fixed elements).
+    * match script(tabBar, "_.ownerDocument.defaultView.getComputedStyle(_).display") != 'none'
+    * def labels = scriptAll(tabBar + ' a', '_.textContent.trim()')
+    * match labels == ['Home', 'Map', 'Eco', 'Community', 'More']
+    * match script('header', "_.ownerDocument.defaultView.getComputedStyle(_).display") == 'none'
 
-  Scenario: The short logo text is used on phones
-    * match text("header a[href='/home']") contains 'Climate App'
+  Scenario: The tab bar is stuck to the bottom of the screen
+    * def box = script(tabBar, '_.getBoundingClientRect().bottom')
+    * assert Math.abs(box - phone.height) < 2
 
-  Scenario: Tapping the button opens the menu, tapping again closes it
-    When click(menuButton)
-    Then match navVisible() == true
-    And match attribute(menuButton, 'aria-expanded') == 'true'
-    And match attribute(menuButton, 'aria-label') == 'Close menu'
-    When click(menuButton)
-    Then match navVisible() == false
+  Scenario: Tapping a tab navigates and marks it as current
+    When click(tabBar + " a[href='/map']")
+    Then waitForUrl('/map')
+    And waitForText('h1', 'Community Map')
+    And match attribute(tabBar + " a[href='/map']", 'aria-current') == 'page'
+    And match attribute(tabBar + " a[href='/eco']", 'aria-current') == null
 
-  Scenario: Tapping a link navigates and closes the menu
-    Given click(menuButton)
-    When click('{a}Green Wallet')
-    Then waitForUrl('/tracker')
-    And match navVisible() == false
-
-  Scenario: Every link in the open menu is big enough to tap (44px)
-    Given click(menuButton)
-    * def heights = scriptAll('#main-nav a', '_.getBoundingClientRect().height')
+  Scenario: Every tab is big enough to tap (44px)
+    * def heights = scriptAll(tabBar + ' a', '_.getBoundingClientRect().height')
     * match each heights == '#? _ >= 44'
-    * def buttonHeight = script(menuButton, '_.getBoundingClientRect().height')
-    * assert buttonHeight >= 44
 
-  Scenario: The page does not scroll sideways on a phone
+  Scenario: The splash screen has no tab bar
+    Given driver baseUrl + '/home'
+    And waitFor('h1')
+    Then match exists(tabBar) == false
+
+  Scenario Outline: <path> does not scroll sideways on a phone
+    Given driver baseUrl + '<path>'
+    And waitFor('h1')
     * def fitsScreen = script('document.documentElement.scrollWidth <= window.innerWidth')
-    * match fitsScreen == true
+    Then match fitsScreen == true
+
+    Examples:
+      | path           |
+      | /home          |
+      | /eco           |
+      | /alerts        |
+      | /eco/recycling |

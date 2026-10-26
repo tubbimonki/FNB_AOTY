@@ -1,11 +1,8 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './useAuth';
 
-// Wrap a route's element in this to make it members-only.
-// Logged-out visitors go to /login, which sends them back afterwards.
-//
-// This only decides what to SHOW. It is not security: the API checks the
-// session on every request (api/middleware/requireAuth.js).
+// Makes a route members-only: logged-out visitors go to /login and come back
+// afterwards. Display only; the API checks the session on every request.
 const RequireAuth = ({ children }) => {
   const { user, status } = useAuth();
   const location = useLocation();

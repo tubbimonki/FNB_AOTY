@@ -5,20 +5,24 @@ Feature: Landing page photos
     * driver baseUrl + '/home'
     * waitFor('main')
 
-  Scenario: Every photo on the page has alt text
-    # A photo is either a loaded <img alt> or Photo.jsx's fallback box with aria-label.
-    * def labels = scriptAll('img, [role=img]', "_.getAttribute('alt') || _.getAttribute('aria-label')")
-    * match labels == '#[_ > 0]'
-    * match each labels == '#? _ && _.length > 0'
+  Scenario: Every photo on the page is either described or marked decorative
+    # A photo is a loaded <img> or Photo.jsx's fallback box. A content photo
+    # carries alt / aria-label text; a decorative one (the hero background)
+    # has alt="" or aria-hidden, which tells screen readers to skip it.
+    # What is never allowed is an <img> with no alt attribute at all.
+    * def described = scriptAll('img, [role=img]', "_.hasAttribute('alt') || _.hasAttribute('aria-label')")
+    * match described == '#[_ > 0]'
+    * match each described == true
 
   Scenario: No broken-image icons: a failed photo becomes the green fallback box
     # Make every Unsplash request fail, then check Photo.jsx swapped in its fallback.
     * driver.intercept({ patterns: [{ urlPattern: '*images.unsplash.com*' }], mock: 'classpath:landing/mocks/images-broken.feature' })
     * refresh()
-    * waitFor("section [role=img][aria-label='Tall trees in a dense green forest']")
+    * def fallback = "section:first-of-type div[aria-hidden='true']"
+    * waitFor(fallback)
     * match exists('section img') == false
-    # The hero photo is a background, so its fallback hides the alt text.
-    * match text('section [role=img]') == ''
+    # The hero photo is a background, so its fallback is hidden from screen readers and shows no text.
+    * match text(fallback) == ''
 
   @network
   Scenario: Every Unsplash photo in images.js is reachable

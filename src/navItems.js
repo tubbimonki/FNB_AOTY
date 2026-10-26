@@ -1,9 +1,15 @@
-// The main nav, kept to two tabs on purpose: one per side of the app.
-//   Dashboard    = read and learn (news + guides together)
-//   Green Wallet = do and track (the tracker, later quizzes and challenges)
-// The logo goes to the public landing page (/home), and the old info pages
-// (About, Features, Benefits) are linked from the footer instead.
+import { Ellipsis, House, Leaf, Map as MapIcon, Users } from 'lucide-react';
+
+// The five tabs from the mockup. `match` lists the paths that light a tab up,
+// so e.g. Eco stays active on /tracker and /eco/water.
 export const navItems = [
-  { label: 'Dashboard', link: '/dashboard' },
-  { label: 'Green Wallet', link: '/tracker' },
+  { label: 'Home', link: '/dashboard', icon: House, match: ['/dashboard', '/alerts', '/services'] },
+  { label: 'Map', link: '/map', icon: MapIcon, match: ['/map'] },
+  { label: 'Eco', link: '/eco', icon: Leaf, match: ['/eco', '/tracker'] },
+  { label: 'Community', link: '/community', icon: Users, match: ['/community'] },
+  { label: 'More', link: '/more', icon: Ellipsis, match: ['/more', '/impact', '/about', '/features', '/benefits'] },
 ];
+
+// True when `pathname` is one of the item's paths or below it.
+export const isActive = (item, pathname) =>
+  item.match.some((path) => pathname === path || pathname.startsWith(`${path}/`));

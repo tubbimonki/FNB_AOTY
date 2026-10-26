@@ -11,7 +11,7 @@ Feature: "Our Features" section
 
   Scenario: It lists the five features by name
     * def names = scriptAll('#features li strong', '_.textContent.trim()')
-    * match names == ['Climate Data Tracker:', 'Interactive Educational Modules:', 'News & Updates:', 'Water Purification Guides:', 'Environmental Benefits Explained:']
+    * match names == ['Weather & Climate Alerts:', 'Community Map:', 'Essential Services:', 'Eco-Impact & Green Wallet:', 'Recycling & Water Guides:']
 
   Scenario: Every feature has a description after its name
     * def items = scriptAll('#features li', '_.textContent')

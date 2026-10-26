@@ -1,4 +1,4 @@
-# Karate test kit for the landing page
+# Karate test kit
 
 End-to-end tests written in [Karate](https://docs.karatelabs.io/). They drive a
 real Chrome against the running app (`npm run dev`) and call the real Express
@@ -9,15 +9,17 @@ a visitor sees it.
 | File | What it covers |
 | --- | --- |
 | `api/health.feature` | `GET /api/health` on Express and through the Vite proxy, speed, unknown routes |
+| `api/modules.feature` | `GET /api/features`, sample data from each module, server-side footprint, reports need a login |
 | `ui/routing.feature` | `/` redirects to `/home`, header/main/footer landmarks, the 404 page |
-| `ui/header.feature` | logo, all 8 nav links in order, active tab, Log in, clicking each link, Dashboard bounce to login |
-| `ui/mobile-menu.feature` | phone width: ☰ button, open/close, aria labels, closes after a tap, 44px tap targets, no sideways scroll |
-| `ui/hero.feature` | headline, both buttons, the `#features` jump, hero photo or fallback, stacked buttons on phones |
+| `ui/header.feature` | desktop: logo, the five tabs, active tab (Eco stays lit on `/tracker`), Log in, Home bounce to login, tab bar hidden |
+| `ui/mobile-menu.feature` | phone width: bottom tab bar, five tabs, stuck to the bottom, tap to navigate, 44px tap targets, hidden on the splash, no sideways scroll |
+| `ui/hero.feature` | splash: app name and tagline, Get started and Log in, the `#features` jump, decorative photo or fallback, stacked buttons on phones |
+| `ui/pages.feature` | every Eco 5.0 page opens with its title, `/impact` and the report form need a login, checklist survives a reload, logging water fills the ring |
 | `ui/features-section.feature` | heading and the five features |
-| `ui/guides-section.feature` | news card, guides card and its 3 links, side-by-side vs stacked layout |
+| `ui/guides-section.feature` | news card and guides card each link 3 items into the dashboard, side-by-side vs stacked layout |
 | `ui/benefits-section.feature` | heading and the four benefits |
-| `ui/footer.feature` | copyright lines, `API: ok`, `API: offline` with a faked dead API, footer on other pages |
-| `ui/images.feature` | alt text on every photo, fallback box when photos fail, every Unsplash URL in `images.js` is live (`@network`) |
+| `ui/footer.feature` | copyright lines, the About / Features / Benefits links and where they go, `API: ok`, `API: offline` with a faked dead API, footer on other pages |
+| `ui/images.feature` | every photo described or marked decorative, fallback box when photos fail, every Unsplash URL in `images.js` is live (`@network`) |
 | `mocks/*.feature` | fake responses used by the footer and image tests (tagged `@ignore`, never run on their own) |
 
 ## Setup (once)
@@ -50,7 +52,7 @@ Useful variations:
 
 ```powershell
 mvn test "-Dkarate.options=--tags @api"          # only the API checks (no browser)
-mvn test "-Dkarate.options=--tags @mobile"       # only the phone menu
+mvn test "-Dkarate.options=--tags @mobile"       # only the phone tab bar
 mvn test "-Dkarate.options=--tags ~@network"     # skip the internet check on photos
 mvn test "-Dkarate.options=classpath:landing/ui/hero.feature"   # one file
 mvn test -Dheadless=false                        # watch Chrome do it
@@ -105,7 +107,7 @@ browser settings. `-Dname=value` on the command line overrides them.
 **Tags** (`@ui`, `@api`, `@mobile`, `@network`, `@ignore`) let you run slices,
 and `~@tag` means "everything except".
 
-**Scenario Outline** in `header.feature` runs the same steps once per row of
+**Scenario Outline** in `footer.feature` runs the same steps once per row of
 the `Examples:` table, with `<label>` and `<path>` filled in from each row.
 
 ## Your turn

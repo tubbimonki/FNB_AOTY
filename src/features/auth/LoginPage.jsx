@@ -1,15 +1,19 @@
 import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './useAuth';
+import AuthShell from './AuthShell';
 
 const LoginPage = () => {
-  const { login } = useAuth();
+  const { user, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Already logged in: nothing to do here.
+  if (user) return <Navigate to="/dashboard" replace />;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -25,51 +29,48 @@ const LoginPage = () => {
   };
 
   return (
-    <main className="max-w-sm mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-4">Log in</h2>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+    <AuthShell
+      title="Log in"
+      footer={
+        <>
+          No account yet?{' '}
+          <Link to="/register" state={location.state} className="font-semibold text-sprout underline">Create one</Link>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <label className="flex flex-col">
-          <span className="text-sm font-semibold mb-1">Email</span>
+          <span className="label">Email</span>
           <input
             type="email"
             autoComplete="email"
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="border rounded p-2"
+            className="input"
           />
         </label>
         <label className="flex flex-col">
-          <span className="text-sm font-semibold mb-1">Password</span>
+          <span className="label">Password</span>
           <input
             type="password"
             autoComplete="current-password"
             required
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="border rounded p-2"
+            className="input"
           />
         </label>
         {error && (
-          <p role="alert" className="text-red-700 text-sm">
+          <p role="alert" className="text-sm text-red-700">
             {error}
           </p>
         )}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="bg-green-600 text-white font-semibold rounded px-4 py-2 disabled:opacity-60"
-        >
+        <button type="submit" disabled={submitting} className="btn mt-1">
           {submitting ? 'Logging in…' : 'Log in'}
         </button>
       </form>
-      <p className="mt-4 text-sm">
-        No account yet?{' '}
-        <Link to="/register" state={location.state} className="underline">
-          Create one
-        </Link>
-      </p>
-    </main>
+    </AuthShell>
   );
 };
 
