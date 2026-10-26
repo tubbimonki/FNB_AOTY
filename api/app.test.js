@@ -36,6 +36,16 @@ describe('API', () => {
     expect(await res.json()).toEqual({ error: 'Not found' });
   });
 
+  it('sends the safety headers', async () => {
+    const res = await fetch(`${api.baseUrl}/api/health`);
+    expect(res.headers.get('x-content-type-options')).toBe('nosniff');
+    expect(res.headers.get('x-frame-options')).toBe('DENY');
+    expect(res.headers.get('content-security-policy')).toBe("frame-ancestors 'none'");
+    expect(res.headers.get('referrer-policy')).toBe('strict-origin-when-cross-origin');
+    expect(res.headers.get('permissions-policy')).toContain('geolocation=(self)');
+    expect(res.headers.get('x-powered-by')).toBeNull();
+  });
+
   it('ignores X-Forwarded-For when no proxy is trusted', async () => {
     const res = await fetch(`${api.baseUrl}/api/health/ip`, { headers: { 'X-Forwarded-For': '203.0.113.7' } });
     expect((await res.json()).ip).not.toBe('203.0.113.7');
