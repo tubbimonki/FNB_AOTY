@@ -6,6 +6,7 @@ import BottomNav from './BottomNav';
 import { navItems, activeTab } from '../navItems';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import { usePointerGlow } from '../hooks/usePointerGlow';
+import { useLocationRefresh } from '../features/weather/usePlace';
 
 // Pages without the phone tab bar (the splash and the login forms).
 const NO_TABS = ['/home', '/login', '/register'];
@@ -18,6 +19,7 @@ const NO_TABS = ['/home', '/login', '/register'];
 // when you open a page inside the same one (so its state survives).
 // useScrollReveal fades cards and titles in as they scroll into view, and
 // usePointerGlow lights up linked cards under the mouse, on every page.
+// useLocationRefresh keeps "My location" current while the app is open.
 const Layout = () => {
   const { pathname } = useLocation();
   const tabs = !NO_TABS.includes(pathname);
@@ -25,6 +27,7 @@ const Layout = () => {
   const page = useRef(null);
   useScrollReveal(page, section);
   usePointerGlow(page, section);
+  useLocationRefresh();
 
   return (
     <div data-accent={activeTab(pathname)?.accent} className={`flex min-h-dvh flex-col ${tabs ? 'pb-tabbar lg:pb-0' : ''}`}>

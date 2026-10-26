@@ -1,19 +1,27 @@
-// Pin colours, icons and names, shared by the map, its legend and the list.
+import { BookOpen, Droplet, Flame, Hospital, House, Megaphone, Siren, Stethoscope, TriangleAlert } from 'lucide-react';
+
+// Pin colours, icons and names, shared by the map, its legend and the lists.
+// Icons are Lucide outlines drawn white on the colour (calmer than emoji).
 // The facility types (clinic ... fire) match api/facilities.js.
 export const PIN_TYPES = {
-  hazard: { label: 'Hazard (unverified)', color: '#dc2626', icon: '⚠️' },
-  report: { label: 'Community report (unverified)', color: '#0ea5e9', icon: '📣' },
-  hospital: { label: 'Hospital', color: '#be123c', icon: '🏥' },
-  clinic: { label: 'Clinic', color: '#059669', icon: '🩺' },
-  water: { label: 'Water point', color: '#2563eb', icon: '💧' },
-  shelter: { label: 'Hall / shelter', color: '#d97706', icon: '🏠' },
-  library: { label: 'Library', color: '#7c3aed', icon: '📚' },
-  police: { label: 'Police', color: '#1e3a8a', icon: '🚓' },
-  fire: { label: 'Fire station', color: '#ea580c', icon: '🚒' },
-  facility: { label: 'Safe facility', color: '#059669', icon: '🏠' },
+  hazard: { label: 'Hazard (unverified)', color: '#dc2626', Icon: TriangleAlert },
+  report: { label: 'Community report (unverified)', color: '#0ea5e9', Icon: Megaphone },
+  hospital: { label: 'Hospital', color: '#be123c', Icon: Hospital },
+  clinic: { label: 'Clinic', color: '#059669', Icon: Stethoscope },
+  water: { label: 'Water point', color: '#2563eb', Icon: Droplet },
+  shelter: { label: 'Hall / shelter', color: '#d97706', Icon: House },
+  library: { label: 'Library', color: '#7c3aed', Icon: BookOpen },
+  police: { label: 'Police', color: '#1e3a8a', Icon: Siren },
+  fire: { label: 'Fire station', color: '#ea580c', Icon: Flame },
+  facility: { label: 'Safe facility', color: '#059669', Icon: House },
 };
+export const pinType = (type) => PIN_TYPES[type] ?? { label: 'Place', color: '#64748b', Icon: House };
 
-const FACILITY_TYPES = ['hospital', 'clinic', 'water', 'shelter', 'library', 'police', 'fire', 'facility'];
+// Facilities this close to you are highlighted on the map and in the lists.
+export const NEAR_KM = 1.5;
+export const isNearby = (km) => Number.isFinite(km) && km <= NEAR_KM;
+
+export const FACILITY_TYPES = ['hospital', 'clinic', 'water', 'shelter', 'library', 'police', 'fire', 'facility'];
 
 // The filter chips. `types` lists the pin types each one shows.
 export const FILTERS = [
@@ -36,11 +44,4 @@ export function withFacilities(pins, places) {
   return [...pins.filter((pin) => !FACILITY_TYPES.includes(pin.type)), ...real];
 }
 
-// Straight-line distance in km between two { lat, lon } points (haversine formula).
-export function distanceKm(a, b) {
-  const rad = (deg) => (deg * Math.PI) / 180;
-  const dLat = rad(b.lat - a.lat);
-  const dLon = rad(b.lon - a.lon);
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLon / 2) ** 2;
-  return 2 * 6371 * Math.asin(Math.sqrt(h));
-}
+export { distanceKm } from '../../../shared/geo.js';

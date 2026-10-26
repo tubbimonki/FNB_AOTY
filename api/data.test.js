@@ -164,7 +164,23 @@ describe('api_cache table', () => {
     expect(calls).toBe(2);
   });
 
-  it('never breaks the page when the table fails', async () => {
+  it('keeps facilities for a month but other answers for a week', async () => {
+    const db = await testDatabase();
+    const day = 24 * 60 * 60 * 1000;
+    const old = createCacheStore(db);
+    await old.save('weather:a', { value: 1, fetchedAt: Date.now() }); // first save sweeps; later ones in the hour don't
+    await old.save('facilities:a', { value: 1, fetchedAt: Date.now() - 10 * day });
+    await old.save('facilities:b', { value: 1, fetchedAt: Date.now() - 40 * day });
+    await old.save('eskom:a', { value: 1, fetchedAt: Date.now() - 10 * day });
+
+    const store = createCacheStore(db);
+    await store.save('news:a', { value: 1, fetchedAt: Date.now() }); // sweeps
+    expect(await store.load('facilities:a')).not.toBeNull();
+    expect(await store.load('facilities:b')).toBeNull();
+    expect(await store.load('eskom:a')).toBeNull();
+  });
+
+    it('never breaks the page when the table fails', async () => {
     const broken = { select: () => { throw new Error('db down'); }, insert: () => { throw new Error('db down'); } };
     const cache = createCache({ staleMs: 100, cooldownMs: 0, store: createCacheStore(broken), name: 'x' });
     expect((await cache.get('k', 10, async () => 'fresh')).value).toBe('fresh');

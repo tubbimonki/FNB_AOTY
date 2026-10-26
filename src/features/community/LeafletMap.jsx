@@ -1,16 +1,20 @@
 import { useEffect, useRef } from 'react';
+import { flushSync } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { PIN_TYPES } from './pinTypes';
+import PinDot from './PinDot';
+import { FACILITY_TYPES, NEAR_KM, PIN_TYPES, distanceKm, isNearby } from './pinTypes';
 
 // A Leaflet map with OpenStreetMap tiles. Leaflet is not a React library, so
 // React only gives it an empty <div> (the ref) and Leaflet draws inside it.
 // Three effects: create the map once, move it when the centre changes, and
-// redraw the pins when they change.
+// redraw the pins (plus a "near you" ring and a you-are-here dot) when either changes.
 const LeafletMap = ({ center, pins, className = '' }) => {
   const boxRef = useRef(null);
   const mapRef = useRef(null);
   const layerRef = useRef(null);
+  const { lat, lon } = center;
 
   useEffect(() => {
     const map = L.map(boxRef.current).setView([center.lat, center.lon], 13);
@@ -46,23 +50,40 @@ const LeafletMap = ({ center, pins, className = '' }) => {
   useEffect(() => {
     const layer = layerRef.current;
     layer.clearLayers();
+    L.circle([lat, lon], {
+      radius: NEAR_KM * 1000, color: '#65a30d', weight: 2, dashArray: '6 6', fillColor: '#bef264', fillOpacity: 0.12, interactive: false,
+    }).addTo(layer);
+    L.circleMarker([lat, lon], { radius: 7, color: '#fff', weight: 3, fillColor: '#2563eb', fillOpacity: 1, interactive: false }).addTo(layer);
     for (const pin of pins) {
-      // A coloured dot with the type's icon, matching the legend. No image files needed.
-      L.marker([pin.lat, pin.lon], { icon: dotIcon(pin.type), title: pin.title, alt: pin.title })
+      // Facilities near you are drawn bigger, with a lime ring, and on top.
+      const near = FACILITY_TYPES.includes(pin.type) && isNearby(distanceKm({ lat, lon }, pin));
+      L.marker([pin.lat, pin.lon], { icon: dotIcon(pin.type, near), title: pin.title, alt: pin.title, zIndexOffset: near ? 1000 : 0 })
         .bindPopup(popup(pin))
         .addTo(layer);
     }
-  }, [pins]);
+  }, [pins, lat, lon]);
 
   return <div ref={boxRef} role="region" aria-label="Map" className={`z-0 ${className}`} />;
 };
 
-function dotIcon(type) {
-  const t = PIN_TYPES[type] ?? { color: '#64748b', icon: '' };
-  const dot = document.createElement('span');
-  dot.textContent = t.icon;
-  dot.style.cssText = `display:grid;place-items:center;width:28px;height:28px;border-radius:9999px;border:3px solid #fff;box-shadow:0 1px 4px rgb(0 0 0 / .35);font-size:13px;background:${t.color}`;
-  return L.divIcon({ html: dot, className: '', iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -14] });
+// The same PinDot as the legend, drawn once per type when this file loads
+// (outside any React render, so flushSync is allowed) and kept as HTML for
+// Leaflet. react-dom/server would do it too but doubles this chunk.
+const dotHtml = new Map();
+for (const type of [...Object.keys(PIN_TYPES), 'unknown']) {
+  for (const near of [false, true]) {
+    const box = document.createElement('div');
+    const root = createRoot(box);
+    flushSync(() => root.render(<PinDot type={type} size={near ? 28 : 22} ring={near} />));
+    dotHtml.set(`${type}:${near}`, box.innerHTML);
+    root.unmount();
+  }
+}
+
+function dotIcon(type, near) {
+  const size = near ? 34 : 28;
+  const html = `<span style="display:block;border-radius:9999px;border:3px solid #fff;box-shadow:0 1px 4px rgb(0 0 0 / .35)">${dotHtml.get(`${PIN_TYPES[type] ? type : 'unknown'}:${near}`)}</span>`;
+  return L.divIcon({ html, className: '', iconSize: [size, size], iconAnchor: [size / 2, size / 2], popupAnchor: [0, -size / 2] });
 }
 
 // Built with textContent, never innerHTML: report text comes from users, so

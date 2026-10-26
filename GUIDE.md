@@ -38,7 +38,7 @@ src/
   features/              one folder per product feature: its pages, hooks and logic
     alerts/              AlertsPage, AlertCard + severity.js, SourceStatus, useAlerts (/api/alerts), EmergencyChecklist + useChecklist
     auth/                AuthProvider (talks to /api/auth), useAuth, RequireAuth, AuthShell, LoginPage, RegisterPage
-    community/           MapPage + LeafletMap, pinTypes.js, CommunityPage, ReportPage, events (EventsCarousel, EventPage, EventList, useEvents), Reactions + useReactions
+    community/           MapPage + LeafletMap, pinTypes.js (colours, outline icons, NEAR_KM), PinDot, CommunityPage, ReportPage, events (EventsCarousel, EventPage, EventList, useEvents), Reactions + useReactions
     dashboard/           DashboardPage (photo hero with greeting, bell, Premium and weather; Quick Access; Shortcuts), ReadingPage (news / guides), MiniWidget, FeatureStrip, HeadlinesWidget
     eco/                 EcoPage (footprint, goals, plant), FootprintPage, useFootprint, GrowingPlant + plantStages.js
     green-wallet/        actions.js, totals.js (maths), useLogs, TrackerPage (rings), ActionPicker, ProgressRings, WalletSummary
@@ -47,9 +47,9 @@ src/
     news/                useNews (/api/news), NewsFeed, newsItems.js
     notifications/       NotificationBell (dashboard bell) and useNotifications (/api/notifications)
     recycling/           RecyclingPage, RecyclingQuick, recyclingData.js, collection.js (collection day, saved per member)
-    services/            ServicesPage (/api/services/status), useFacilities (/api/services/facilities), PowerQuick
+    services/            ServicesPage (/api/services/status), useFacilities (/api/services/facilities, plus a saved copy per place), PowerQuick
     water/               WaterPage, water.js, useWaterLogs, WeeklyBars, WaterQuick
-    weather/             weather.js (places, codes, alerts, tips), useWeather (/api/weather), WeatherCard
+    weather/             weather.js (places, codes, alerts, tips), usePlace (the one shared place + 10-minute location refresh), useWeather (/api/weather), WeatherCard
   services/              api.js (fetch wrapper: apiGet/apiPost/apiPut/apiDelete), storage.js (localStorage)
   hooks/                 shared hooks: useSynced (personal data in Postgres + a browser copy), useStoredState, useApiData, useWide, and the motion hooks useScrollReveal, usePointerGlow, useParallax, useCountUp
   test/                  test setup, renderWithProviders, mockApi, wideScreen
@@ -62,7 +62,7 @@ api/
   schema.js              core tables (users, api_cache); modules keep theirs in modules/<name>/schema.js
   migrations/            SQL made by `npm run db:generate` (plus meta/, which Drizzle needs at runtime). Never edit an old one
   cache.js               shared cache for outside APIs: fresh copy, one shared call, stale fallback, failure cooldown
-  cacheStore.js          the api_cache table, so cached answers survive a restart and are shared by PC and Render
+  cacheStore.js          the api_cache table, so cached answers survive a restart and are shared by PC and Render (rows kept 7 days, facilities 30)
   warmup.js              fills the caches at start and every 10 minutes
   weather.js, airQuality.js   Open-Meteo forecast and air quality
   eskom.js               EskomSePush area status (planned outages, neighbour reports)
@@ -119,6 +119,9 @@ Each module lists what it emits and hears in its `events` field, and `api/module
 - **Impact tracker:** the leaf in the bottom corner (`features/impact/ImpactTracker.jsx`), on every page except the splash and the forms. Hover or tap shows actions, CO2 and rand saved, and a comparison from `comparisons.js`; each comparison names its source.
 - **Essential services:** with the `ESKOMSEPUSH_*` settings, the Electricity tab is live (planned outages and neighbour reports) and Water goes live when neighbours report it. Facilities come from OpenStreetMap. Transport and waste have no public API, so they stay demo data with a "Demo data" pill and a reason.
 - **Weather and alerts:** the browser only calls our API. `/api/alerts` combines Open-Meteo forecasts, EskomSePush, air quality and SAWS warnings; one source failing or being slow (over 4 s) never hides the others.
+- **Your place and location:** `features/weather/usePlace.js` holds the one place that weather, alerts, services and the map all use (saved as `weather:place`). When you pick "My location", `useLocationRefresh` (run in `Layout`) reads the device location again every 10 minutes and when the tab comes back, and only moves the place if you moved 500 m or more (GPS jitter would refetch everything). A picked city is never overridden, and a "denied" answer stops it.
+- **Nearby facilities:** within `NEAR_KM` (1.5 km) of your place they get a lime ring, a bigger marker and a "Nearby" badge, on the map (with a dashed 1.5 km circle) and in the Services list, which is sorted nearest first. Icons are Lucide outlines in white on the type's colour (`PinDot`), the same in the legend, lists and markers.
+- **Facilities caching:** the server keeps each answer per rounded place (about 1 km, `shared/geo.js placeKey`) in `api_cache`: fresh for a day, then served at once while it refreshes in the background (stale-while-revalidate), kept for 30 days. The browser keeps the last good answer for the last 5 places (`facilities:cache`), shows it straight away labelled "Saved copy from ...", and only falls back to the demo list when it has neither.
 - **Map:** Leaflet with OpenStreetMap tiles, loaded only on `/map`. Popups are built with `textContent` because report text comes from users. Community reports show as unverified.
 - **Security headers:** `api/app.js` sends `nosniff`, no framing, a strict `Referrer-Policy`, a `Permissions-Policy` that only allows location, and HSTS in production. A full Content-Security-Policy is left out on purpose: tiles, photos and fonts come from several hosts and a wrong list would break pages.
 - **Caches of outside data:** weather, air quality, news, EskomSePush, SAWS and facilities all keep their last answer in the `api_cache` table too, so a restart (Render's free plan sleeps) starts warm.

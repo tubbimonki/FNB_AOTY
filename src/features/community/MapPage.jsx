@@ -8,7 +8,12 @@ import { useWeather } from '../weather/useWeather';
 import { useFacilities } from '../services/useFacilities';
 import { useWide } from '../../hooks/useWide';
 import EventsQuick from './EventsQuick';
-import { FILTERS, PIN_TYPES, distanceKm, filterPins, withFacilities } from './pinTypes';
+import PinDot from './PinDot';
+import Pill from '../../components/ui/Pill';
+import { gpsPlace } from '../weather/usePlace';
+import { FACILITY_TYPES, FILTERS, NEAR_KM, PIN_TYPES, distanceKm, filterPins, isNearby, withFacilities } from './pinTypes';
+
+const savedTime = (ms) => new Date(ms).toLocaleString('en-ZA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 // Leaflet is big, so it loads only when someone opens the map ("code splitting").
 const LeafletMap = lazy(() => import('./LeafletMap'));
@@ -35,7 +40,7 @@ const MapPage = () => {
 
   const locate = () =>
     navigator.geolocation?.getCurrentPosition(({ coords }) =>
-      setPlace({ id: 'gps', name: 'My location', lat: coords.latitude, lon: coords.longitude }),
+      setPlace(gpsPlace(coords)),
     );
 
   return (
@@ -64,9 +69,13 @@ const MapPage = () => {
               <LeafletMap center={place} pins={pins} className="h-[55dvh] min-h-80 w-full lg:h-[34rem] 2xl:h-[44rem]" />
             </Suspense>
             <ul aria-label="Legend" className="grid grid-cols-2 gap-2 border-t border-slate-100 p-3 text-sm">
+              <li className="flex items-center gap-2">
+                <span aria-hidden="true" className="size-5 rounded-full border-2 border-dashed border-lime-600 bg-lime-200/40" />
+                Within {NEAR_KM} km of you
+              </li>
               {shownTypes.map((type) => (
                 <li key={type} className="flex items-center gap-2">
-                  <span aria-hidden="true" className="grid size-5 place-items-center rounded-full text-[10px]" style={{ background: PIN_TYPES[type].color }}>{PIN_TYPES[type].icon}</span>
+                  <PinDot type={type} size={20} />
                   {PIN_TYPES[type].label}
                 </li>
               ))}
@@ -84,21 +93,24 @@ const MapPage = () => {
           ) : (
             <ul className="card divide-y divide-slate-100 p-0 sm:p-0">
               {nearestFirst.length === 0 && <li className="p-4 text-slate-500">Nothing within 50 km for this filter.</li>}
-              {nearestFirst.map((pin) => (
-                <li key={pin.id} className="flex gap-3 p-4">
-                  <span aria-hidden="true" className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full text-xs" style={{ background: PIN_TYPES[pin.type]?.color }}>{PIN_TYPES[pin.type]?.icon}</span>
+              {nearestFirst.map((pin) => {
+                const near = FACILITY_TYPES.includes(pin.type) && isNearby(pin.km);
+                return (
+                <li key={pin.id} className={`flex gap-3 p-4 ${near ? 'bg-lime-50' : ''}`}>
+                  <PinDot type={pin.type} ring={near} />
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold">{pin.url ? <a href={pin.url} target="_blank" rel="noreferrer">{pin.title}</a> : pin.title}</p>
-                    <p className="text-sm text-slate-500">{pin.detail}</p>
+                    <p className="text-sm text-slate-500">{near && <Pill tone="green" className="mr-2">Nearby</Pill>}{pin.detail}</p>
                   </div>
                   <span className="shrink-0 text-sm text-slate-500">{pin.km.toFixed(1)} km</span>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           )}
           <p className="text-xs text-slate-500">
             {places?.length
-              ? <>Facilities: map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors. </>
+              ? <>Facilities{nearby.cached && ` (saved copy from ${savedTime(nearby.savedAt)})`}: map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors. </>
               : nearby.status === 'loading' ? 'Loading real facilities from OpenStreetMap… ' : 'Demo facilities: OpenStreetMap could not be reached. '}
             {data?.sample && 'Hazards and reports are sample pins until real reports come in.'}
           </p>

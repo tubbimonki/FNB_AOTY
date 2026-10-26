@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../../App';
 import { renderWithProviders } from '../../test/renderWithProviders';
@@ -61,6 +61,41 @@ describe('Essential Services (/services)', () => {
     expect(await screen.findByRole('link', { name: 'Hillbrow Clinic' })).toHaveAttribute('href', 'https://www.openstreetmap.org/node/1');
     expect(screen.queryByText('Public library')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'OpenStreetMap' })).toBeInTheDocument();
+  });
+
+  it('sorts facilities nearest first and badges the ones within 1.5 km', async () => {
+    mockApi({
+      'GET /api/services/status': [200, { ...SAMPLE_STATUS, sample: true, live: [] }],
+      [FACILITIES]: [200, {
+        source: 'OpenStreetMap', stale: false,
+        facilities: [
+          { id: 'node/2', type: 'library', name: 'Far Library', detail: 'Library', distanceKm: 2.4 },
+          { id: 'node/1', type: 'clinic', name: 'Near Clinic', detail: 'Clinic', distanceKm: 0.6 },
+        ],
+      }],
+    });
+    renderWithProviders(<App />, { route: '/services' });
+    const list = within((await screen.findByText('Near Clinic')).closest('ul'));
+    const rows = list.getAllByRole('listitem');
+    expect(rows.map((li) => li.textContent)).toEqual([expect.stringContaining('Near Clinic'), expect.stringContaining('Far Library')]);
+    expect(within(rows[0]).getByText('Nearby')).toBeInTheDocument();
+    expect(within(rows[1]).queryByText('Nearby')).not.toBeInTheDocument();
+  });
+
+  it('shows the saved copy, labelled, when OpenStreetMap is down later', async () => {
+    const clinic = { id: 'node/1', type: 'clinic', name: 'Hillbrow Clinic', detail: 'Clinic', distanceKm: 0.8 };
+    const status = [200, { ...SAMPLE_STATUS, sample: true, live: [] }];
+    mockApi({ 'GET /api/services/status': status, [FACILITIES]: [200, { facilities: [clinic], places: [] }] });
+    const first = renderWithProviders(<App />, { route: '/services' });
+    await screen.findByText('Hillbrow Clinic');
+    await waitFor(() => expect(localStorage.getItem('facilities:cache')).toContain('-26.20,28.05'));
+    first.unmount();
+
+    mockApi({ 'GET /api/services/status': status }); // facilities now fail
+    renderWithProviders(<App />, { route: '/services' });
+    expect(await screen.findByText('Hillbrow Clinic')).toBeInTheDocument();
+    expect(screen.queryByText('Public library')).not.toBeInTheDocument();
+    expect(await screen.findByText(/Saved copy from .*could not be reached/)).toBeInTheDocument();
   });
 
   it('offers a retry when the API is down', async () => {

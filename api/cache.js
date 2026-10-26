@@ -8,11 +8,13 @@
 //   Before asking upstream we look in the table too: another server on the
 //   same database (your PC and Render on Neon) may have just fetched it,
 //   and sharing that answer saves quota (EskomSePush allows 50 calls a day).
+// - revalidate (optional): past fresh but not stale, answer the old copy at
+//   once and refresh it in the background (stale-while-revalidate)
 // weather.js has the same idea written out by hand.
 
 export class Unavailable extends Error {}
 
-export function createCache({ staleMs, cooldownMs, maxKeys = 200, now = Date.now, store = null, name = 'cache' }) {
+export function createCache({ staleMs, cooldownMs, maxKeys = 200, now = Date.now, store = null, name = 'cache', revalidate = false }) {
   const entries = new Map(); // key -> { value, fetchedAt }, oldest first
   const inFlight = new Map(); // key -> Promise
   const failures = new Map(); // key -> { at, message }
@@ -57,7 +59,12 @@ export function createCache({ staleMs, cooldownMs, maxKeys = 200, now = Date.now
     const failed = failures.get(key);
     const coolingDown = failed && now() - failed.at < cooldownMs;
     if (!coolingDown && !inFlight.has(key)) {
-      inFlight.set(key, fetchAndKeep(key, load).finally(() => inFlight.delete(key)));
+      const call = fetchAndKeep(key, load).finally(() => inFlight.delete(key));
+      inFlight.set(key, call);
+      if (revalidate && age < staleMs) {
+        call.then(() => failures.delete(key), (err) => failures.set(key, { at: now(), message: err.message }));
+        return { ...hit, stale: true };
+      }
     }
     try {
       if (coolingDown && !inFlight.has(key)) throw new Error(failed.message);
