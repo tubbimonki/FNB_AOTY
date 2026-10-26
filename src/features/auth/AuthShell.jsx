@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
-import { Sprout } from 'lucide-react';
 import Photo from '../../components/Photo';
 import DriftingLeaves from '../../components/ui/DriftingLeaves';
 import { pageImages } from '../../assets/images';
 import { APP_NAME, TAGLINE } from '../../brand';
+import EcoMark from '../../components/ui/EcoMark';
 
 // The frame around the login and sign-up forms: the splash photo behind a
 // white card, so they feel like the next step after "Get started".
@@ -18,7 +18,7 @@ const AuthShell = ({ title, children, footer }) => (
     <div className="w-full max-w-sm">
       <Link to="/home" className="rise group mb-6 flex flex-col items-center gap-2 text-sprout no-underline hover:no-underline" style={{ '--i': 0 }}>
         <span className="logo-glow grid size-16 place-items-center rounded-full border-4 border-sprout/70 bg-forest-950/60" aria-hidden="true">
-          <Sprout className="sprout-sway size-8" strokeWidth={1.5} />
+          <EcoMark className="sprout-sway size-8" />
         </span>
         <span className="text-xl font-bold">{APP_NAME}</span>
         <span className="text-sm">{TAGLINE}</span>
