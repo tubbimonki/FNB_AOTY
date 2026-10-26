@@ -14,6 +14,12 @@ class ApiError extends Error {
   }
 }
 
+// Announced on window when a members-only route answers 401: the session
+// ended (expired, or revoked by logging out in another tab). AuthProvider
+// hears it and logs out here too, so the page stops pretending to save.
+// /auth/* is left out: a 401 there is a normal answer (guest, wrong password).
+export const SESSION_ENDED = 'session-ended';
+
 async function request(path, { body, ...options } = {}) {
   const res = await fetch(`${BASE}${path}`, {
     ...options,
@@ -25,6 +31,7 @@ async function request(path, { body, ...options } = {}) {
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
+  if (res.status === 401 && !path.startsWith('/auth/')) window.dispatchEvent(new Event(SESSION_ENDED));
   if (res.status === 204) return null; // e.g. logout: success, no body
   const data = await res.json().catch(() => null);
   if (!res.ok) throw new ApiError(res.status, data?.error ?? `Request failed (${res.status})`);
