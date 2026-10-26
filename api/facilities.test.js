@@ -57,6 +57,25 @@ describe('createFacilitiesService', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(6);
   });
 
+  it('answers a day-old list at once and refreshes it behind the scenes', async () => {
+    let clock = 0;
+    let release;
+    const service = createFacilitiesService({ fetchImpl: async () => json(OVERPASS), now: () => clock });
+    await service.getFacilities(-26.1, 28.23);
+
+    clock += 25 * 60 * 60 * 1000;
+    const slow = createFacilitiesService({
+      fetchImpl: () => new Promise((resolve) => (release = () => resolve(json(OVERPASS)))),
+      now: () => clock,
+      cacheStore: { load: async () => ({ value: (await service.getFacilities(-26.1, 28.23)).places, fetchedAt: 0 }), save: async () => {} },
+    });
+    const old = await slow.getFacilities(-26.1, 28.23); // upstream hasn't answered, the saved copy has
+    expect(old).toMatchObject({ stale: true, fetchedAt: 0 });
+    release();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(await slow.getFacilities(-26.1, 28.23)).toMatchObject({ stale: false, fetchedAt: clock });
+  });
+
   it('gives up when Overpass is down and nothing is cached', async () => {
     const service = createFacilitiesService({ fetchImpl: async () => json({}, 504) });
     await expect(service.getFacilities(-26.1, 28.23)).rejects.toBeInstanceOf(FacilitiesUnavailable);

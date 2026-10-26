@@ -1,7 +1,9 @@
-import { eq, lt } from 'drizzle-orm';
+import { and, eq, lt, notLike } from 'drizzle-orm';
 import { apiCache } from './schema.js';
 
-const KEEP_MS = 7 * 24 * 60 * 60 * 1000; // rows older than a week are deleted
+const DAY = 24 * 60 * 60 * 1000;
+const KEEP_MS = 7 * DAY; // rows older than a week are deleted...
+const KEEP_FACILITIES_MS = 30 * DAY; // ...except facilities, which rarely move
 
 // The api_cache table as a second layer under api/cache.js: memory answers
 // first, this table survives a restart (Render restarts the app often).
@@ -27,7 +29,9 @@ export function createCacheStore(db) {
         await db.insert(apiCache).values(row).onConflictDoUpdate({ target: apiCache.key, set: row });
         if (Date.now() - lastSweep > 60 * 60 * 1000) {
           lastSweep = Date.now();
-          await db.delete(apiCache).where(lt(apiCache.fetchedAt, new Date(Date.now() - KEEP_MS)));
+          const before = (ms) => lt(apiCache.fetchedAt, new Date(Date.now() - ms));
+          await db.delete(apiCache).where(and(before(KEEP_MS), notLike(apiCache.key, 'facilities:%')));
+          await db.delete(apiCache).where(before(KEEP_FACILITIES_MS));
         }
       } catch (err) {
         console.error('api_cache write:', err.message);

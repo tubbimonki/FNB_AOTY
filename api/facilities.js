@@ -3,6 +3,7 @@
 // Docs: https://wiki.openstreetmap.org/wiki/Overpass_API
 // Data (c) OpenStreetMap contributors, ODbL. The page must say so.
 import { createCache, Unavailable } from './cache.js';
+import { distanceKm, placeKey } from '../shared/geo.js';
 
 // Backup when every Overpass server fails: OSM's own search (Nominatim), same data.
 // Policy: at most 1 request a second and a User-Agent. https://operations.osmfoundation.org/policies/nominatim/
@@ -19,7 +20,7 @@ const OVERPASS_MIRRORS = [
 ];
 const TRY_TIMEOUT_MS = 25000; // all servers are asked at once; the first good answer wins
 const FRESH_MS = 24 * 60 * 60 * 1000; // facilities rarely move: one call per place a day
-const STALE_MS = 7 * 24 * 60 * 60 * 1000;
+const STALE_MS = 30 * 24 * 60 * 60 * 1000; // a month-old list still beats the demo one
 const COOLDOWN_MS = 5 * 60 * 1000;
 const RADIUS_M = 3000;
 const PER_TYPE = 2; // nearest 2 of each type, so one type can't fill the list
@@ -27,9 +28,6 @@ const MAX_RESULTS = 10;
 const MAX_MAP = 60; // dots on the map
 
 export { Unavailable as FacilitiesUnavailable };
-
-// Same rounding as weather.js: about 1 km, shared cache, no exact location kept.
-const placeKey = (lat, lon) => `${lat.toFixed(2)},${lon.toFixed(2)}`;
 
 // OSM tags -> our facility types. First match wins.
 const TYPES = [
@@ -57,12 +55,7 @@ export function overpassQuery(lat, lon) {
   return `[out:json][timeout:25];\n(\n${lines.join('\n')}\n);\nout tags center 150;`;
 }
 
-// Straight-line distance in km (haversine).
-export function distanceKm(a, b) {
-  const rad = (d) => (d * Math.PI) / 180;
-  const h = Math.sin(rad(b.lat - a.lat) / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(rad(b.lon - a.lon) / 2) ** 2;
-  return 2 * 6371 * Math.asin(Math.sqrt(h));
-}
+export { distanceKm };
 
 // Overpass elements -> every place found, nearest first (the map shows these).
 function toPlaces(raw, from) {
@@ -114,7 +107,7 @@ function nominatimToElements(results) {
 // pauseMs: Nominatim allows 1 request a second (tests pass 0).
 export function createFacilitiesService({ url = OVERPASS_MIRRORS, fetchImpl = fetch, now = Date.now, pauseMs = 1100, cacheStore = null } = {}) {
   const servers = Array.isArray(url) ? url : [url, ...OVERPASS_MIRRORS.filter((m) => m !== url)];
-  const cache = createCache({ staleMs: STALE_MS, cooldownMs: COOLDOWN_MS, now, store: cacheStore, name: 'facilities' });
+  const cache = createCache({ staleMs: STALE_MS, cooldownMs: COOLDOWN_MS, now, store: cacheStore, name: 'facilities', revalidate: true });
 
   async function askServer(server, lat, lon) {
     const res = await fetchImpl(server, {
