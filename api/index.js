@@ -122,11 +122,11 @@ if (saws.enabled) {
 }
 
 // Climate news from RSS feeds. NEWS_FEEDS=off shows only the bundled snapshot.
-const news = process.env.NEWS_FEEDS === 'off' ? null : createNewsService();
+const news = process.env.NEWS_FEEDS === 'off' ? null : createNewsService({ store: cacheStore });
 
 // Made here (not inside createApp) so the warm-up below fills the same caches the routes use.
 const weather = createWeatherService({ store: cacheStore, log: console.log });
-const airQuality = createAirQualityService();
+const airQuality = createAirQualityService({ store: cacheStore });
 
 const server = createApp({ db, reactionsDb, jwtSecret: JWT_SECRET, cacheStore, trustProxy, staticDir, featuresOff, weather, airQuality, eskom, facilities, saws, news }).listen(PORT, () => {
   console.log(`🚀 Server listening on http://localhost:${PORT}`);

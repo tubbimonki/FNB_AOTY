@@ -56,6 +56,19 @@ describe('news feeds', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
+  it('keeps each feed in the store, so a restarted server shows the news at once', async () => {
+    const rows = new Map();
+    const store = { load: async (key) => rows.get(key) ?? null, save: async (key, entry) => void rows.set(key, entry) };
+    await createNewsService({ feeds: [za, world], fetchImpl: fetchFrom({ [za.url]: zaRss, [world.url]: worldAtom }), now: () => NOW, store }).getNews();
+    expect([...rows.keys()]).toEqual([`news:${za.url}`, `news:${world.url}`]);
+
+    const offline = fetchFrom({});
+    const result = await createNewsService({ feeds: [za, world], fetchImpl: offline, now: () => NOW, store }).getNews();
+    expect(result.source).toBe('live');
+    expect(result.items[0].title).toBe('Cape Town dams drop again');
+    expect(offline).not.toHaveBeenCalled();
+  });
+
   it('falls back to the snapshot of real stories when every feed fails', async () => {
     const news = createNewsService({ feeds: [za, world], fetchImpl: fetchFrom({}), now: () => NOW });
     const result = await news.getNews();

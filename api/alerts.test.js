@@ -99,6 +99,20 @@ describe('air quality service', () => {
     await air.getAir(-26.201, 28.049);
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
+
+  it('keeps its answer in the store, so a restarted server has it at once', async () => {
+    const { createAirQualityService } = await import('./airQuality.js');
+    const rows = new Map();
+    const store = { load: async (key) => rows.get(key) ?? null, save: async (key, entry) => void rows.set(key, entry) };
+    const before = createAirQualityService({ fetchImpl: async () => Response.json({ current: { us_aqi: 64, pm2_5: 18 } }), now: () => 0, store });
+    await before.getAir(-26.2, 28.05);
+    expect([...rows.keys()]).toEqual(['air:-26.20,28.05']);
+
+    const offline = vi.fn(async () => { throw new Error('no network'); });
+    const after = createAirQualityService({ fetchImpl: offline, now: () => 1000, store });
+    expect(await after.getAir(-26.2, 28.05)).toMatchObject({ aqi: 64, stale: false });
+    expect(offline).not.toHaveBeenCalled();
+  });
 });
 
 describe('GET /api/alerts/saws', () => {

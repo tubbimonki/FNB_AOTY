@@ -19,8 +19,10 @@ const BANDS = [
 ];
 export const aqiBand = (aqi) => BANDS.find(([max]) => aqi <= max)[1];
 
-export function createAirQualityService({ fetchImpl = fetch, now = Date.now } = {}) {
-  const cache = createCache({ staleMs: STALE_MS, cooldownMs: COOLDOWN_MS, now });
+// store (api/cacheStore.js): keeps answers in the api_cache table, so a
+// restart (Render sleeps the free plan) doesn't start from nothing.
+export function createAirQualityService({ fetchImpl = fetch, now = Date.now, store = null } = {}) {
+  const cache = createCache({ staleMs: STALE_MS, cooldownMs: COOLDOWN_MS, now, store, name: 'air' });
 
   async function load(lat, lon) {
     const params = new URLSearchParams({ latitude: lat.toFixed(2), longitude: lon.toFixed(2), current: 'us_aqi,pm2_5' });
