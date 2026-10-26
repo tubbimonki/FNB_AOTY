@@ -1,15 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarDays, Cpu, Gift, Newspaper, Package, Search, ShieldAlert, Truck, Wine } from 'lucide-react';
 import AppBar from '../../components/ui/AppBar';
 import IconChip from '../../components/ui/IconChip';
 import Pill from '../../components/ui/Pill';
 import ListRow, { ListCard } from '../../components/ui/ListRow';
-import { loadJSON, saveJSON } from '../../services/storage';
 import { ALL_ITEMS, DROP_OFFS, MATERIALS } from './recyclingData';
 import { useWide } from '../../hooks/useWide';
 import RelatedGuides from '../guides/RelatedGuides';
-import { COLLECTION_KEY, WEEKDAYS, nextCollection } from './collection';
+import { WEEKDAYS, nextCollection, useCollectionDay } from './collection';
 
 const ICONS = { plastic: Package, glass: Wine, paper: Newspaper, metal: Package, ewaste: Cpu };
 
@@ -19,13 +18,9 @@ const prettyDate = (date) => new Date(`${date}T12:00`).toLocaleDateString('en-ZA
 const RecyclingPage = () => {
   const [materialId, setMaterialId] = useState('plastic');
   const [query, setQuery] = useState('');
-  const [weekday, setWeekday] = useState(() => loadJSON(COLLECTION_KEY, 2));
+  const [weekday, setWeekday] = useCollectionDay();
   const material = MATERIALS.find((m) => m.id === materialId);
   const wide = useWide();
-
-  useEffect(() => {
-    saveJSON(COLLECTION_KEY, weekday);
-  }, [weekday]);
 
   const q = query.trim().toLowerCase();
   const results = q ? ALL_ITEMS.filter((r) => r.item.toLowerCase().includes(q)) : [];

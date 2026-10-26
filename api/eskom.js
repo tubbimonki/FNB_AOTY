@@ -17,7 +17,7 @@ const OFFICIAL_WATER = 'https://www.ekurhuleni.gov.za/category/press-releases/se
 export { Unavailable as EskomUnavailable };
 
 // "Mon 18:00" in SA time, whatever time zone the server runs in.
-export function formatSlot(iso) {
+function formatSlot(iso) {
   return new Intl.DateTimeFormat('en-ZA', {
     weekday: 'short',
     hour: '2-digit',

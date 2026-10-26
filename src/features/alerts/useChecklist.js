@@ -1,7 +1,7 @@
 import { useSyncedValue } from '../../hooks/useSynced';
 import { CHECKLIST } from './checklist';
 
-export const CHECKLIST_KEY = 'alerts:checklist';
+const CHECKLIST_KEY = 'alerts:checklist';
 
 // Which checklist items are ticked, as a list of ids. Saved in Postgres
 // when logged in (/api/alerts/checklist), and in this browser.

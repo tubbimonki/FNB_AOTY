@@ -2,7 +2,7 @@
 // The facility types (clinic ... fire) match api/facilities.js.
 export const PIN_TYPES = {
   hazard: { label: 'Hazard (unverified)', color: '#dc2626', icon: '⚠️' },
-  report: { label: 'Community report', color: '#0ea5e9', icon: '📣' },
+  report: { label: 'Community report (unverified)', color: '#0ea5e9', icon: '📣' },
   hospital: { label: 'Hospital', color: '#be123c', icon: '🏥' },
   clinic: { label: 'Clinic', color: '#059669', icon: '🩺' },
   water: { label: 'Water point', color: '#2563eb', icon: '💧' },
@@ -13,7 +13,7 @@ export const PIN_TYPES = {
   facility: { label: 'Safe facility', color: '#059669', icon: '🏠' },
 };
 
-export const FACILITY_TYPES = ['hospital', 'clinic', 'water', 'shelter', 'library', 'police', 'fire', 'facility'];
+const FACILITY_TYPES = ['hospital', 'clinic', 'water', 'shelter', 'library', 'police', 'fire', 'facility'];
 
 // The filter chips. `types` lists the pin types each one shows.
 export const FILTERS = [

@@ -28,7 +28,7 @@ function upstreamUrl(lat, lon) {
 }
 
 // Open-Meteo's column-style arrays -> the small shape the frontend uses.
-export function toWeather(raw) {
+function toWeather(raw) {
   const { current, daily } = raw;
   return {
     current: {

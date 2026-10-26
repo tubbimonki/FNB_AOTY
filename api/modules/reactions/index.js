@@ -67,8 +67,9 @@ export default {
         .where(and(eq(eventReactions.eventId, eventId), eq(eventReactions.userId, req.user.id), eq(eventReactions.reaction, reaction)))
         .returning();
       const reacted = removed.length === 0;
-      if (reacted) await reactionsDb.insert(eventReactions).values(row).onConflictDoNothing();
-      await bus.emit(reacted ? 'reaction.added' : 'reaction.removed', row);
+      // Announce only what really changed (two taps at once can insert nothing).
+      const added = reacted ? await reactionsDb.insert(eventReactions).values(row).onConflictDoNothing().returning() : [];
+      if (added.length || !reacted) await bus.emit(reacted ? 'reaction.added' : 'reaction.removed', row);
 
       res.json({ ...(await summary(req.user, eventId))[eventId], reacted });
     });

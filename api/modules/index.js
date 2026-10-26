@@ -3,6 +3,7 @@ import community from './community/index.js';
 import eco from './eco/index.js';
 import events from './events/index.js';
 import impact from './impact/index.js';
+import notifications from './notifications/index.js';
 import reactions from './reactions/index.js';
 import services from './services/index.js';
 import wallet from './wallet/index.js';
@@ -10,7 +11,7 @@ import wallet from './wallet/index.js';
 // The feature modules of the modular monolith. Each one owns its routes,
 // sample data and its own tables (schema.js), and talks to the others
 // through events on the bus (api/bus.js). See api/modules/README.md.
-export const MODULES = [alerts, community, events, reactions, services, eco, wallet, impact];
+export const MODULES = [alerts, community, events, reactions, services, eco, wallet, impact, notifications];
 
 // FEATURES_OFF=community,impact -> ['community', 'impact']
 export const parseFeatureList = (value = '') =>

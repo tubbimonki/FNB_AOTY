@@ -10,7 +10,7 @@ Feature: Feature modules on the Express API
     Given path 'features'
     When method get
     Then status 200
-    And match response.on == ['alerts', 'community', 'events', 'reactions', 'services', 'eco', 'wallet', 'impact']
+    And match response.on == ['alerts', 'community', 'events', 'reactions', 'services', 'eco', 'wallet', 'impact', 'notifications']
 
   Scenario Outline: GET <route> answers with sample data
     Given path '<route>'
@@ -100,3 +100,15 @@ Feature: Feature modules on the Express API
     Given path 'alerts'
     When method get
     Then status 400
+
+  Scenario: Visitors can read the notifications meant for everyone
+    Given path 'notifications'
+    And param place = 'Johannesburg'
+    When method get
+    Then status 200
+    And match response.items == '#[]'
+
+  Scenario: The recycling day is members-only
+    Given path 'eco', 'prefs', 'recyclingDay'
+    When method get
+    Then status 401

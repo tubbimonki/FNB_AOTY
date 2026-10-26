@@ -67,3 +67,12 @@ Feature: Eco 5.0 pages open and show their title bar
     Given driver baseUrl + '/alerts'
     When waitForAny(["//ul[@aria-label='Alert sources']", "//p[contains(., 'not real alerts')]", "//p[contains(., 'only forecast warnings')]"])
     Then match text('main') !contains 'Load shedding'
+
+  Scenario: The impact tracker in the corner opens with your totals
+    Given driver baseUrl + '/home'
+    And script('localStorage.clear()')
+    And driver baseUrl + '/eco'
+    When waitFor("button[aria-label^='Your impact']").click()
+    Then waitFor("section[aria-label='Your impact so far']")
+    And match text("section[aria-label='Your impact so far']") contains 'CO₂ avoided'
+    And match text("section[aria-label='Your impact so far']") contains 'Log your first action'

@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createClient, startTestServer } from './test/startTestServer.js';
 import { validateReport } from '../shared/reports.js';
 import { CHECKLIST } from '../shared/checklist.js';
+import { MODULES } from './modules/index.js';
 
 describe('feature modules', () => {
   let api;
@@ -18,7 +19,7 @@ describe('feature modules', () => {
 
   it('lists the modules that are switched on', async () => {
     const { body } = await client.request('GET', '/api/features');
-    expect(body.on).toEqual(['alerts', 'community', 'events', 'reactions', 'services', 'eco', 'wallet', 'impact']);
+    expect(body.on).toEqual(['alerts', 'community', 'events', 'reactions', 'services', 'eco', 'wallet', 'impact', 'notifications']);
   });
 
   it.each([
@@ -84,19 +85,58 @@ describe('feature modules', () => {
   });
 
   it('works out impact from what was saved', async () => {
-    // So far: one water day under the goal (20 points, from the test above).
+    // So far: one water day under the goal (20 points) and two reports (5 each), from the tests above.
     const before = (await client.request('GET', '/api/impact/me')).body;
-    expect(before).toMatchObject({ points: 20, level: 1, title: 'Seedling', co2Kg: 0 });
+    expect(before).toMatchObject({ points: 30, level: 1, title: 'Seedling', co2Kg: 0 });
 
     await client.request('POST', '/api/wallet/logs', { id: 'log-1', actionId: 'recycle-bag', date: '2026-10-25' });
     await client.request('PUT', '/api/alerts/checklist', { value: CHECKLIST.map((item) => item.id) });
     await client.request('PUT', '/api/eco/footprint/mine', { value: { answers: { diet: 'vegan' } } });
 
     const after = (await client.request('GET', '/api/impact/me')).body;
-    expect(after.points).toBe(20 + 10 + 50 + 100);
+    expect(after.points).toBe(30 + 10 + 50 + 100);
     expect(after.co2Kg).toBe(1);
     expect(after.badges.find((b) => b.id === 'prepared').unlocked).toBe(true);
     expect(after.badges.find((b) => b.id === 'recycling-champ').have).toBe(1);
+  });
+
+  it('saves the recycling day per member', async () => {
+    expect((await client.request('GET', '/api/eco/prefs/recyclingDay')).body).toEqual({ value: null });
+    expect((await client.request('PUT', '/api/eco/prefs/recyclingDay', { value: 5 })).body).toEqual({ value: 5 });
+    expect((await client.request('GET', '/api/eco/prefs/recyclingDay')).body).toEqual({ value: 5 });
+    expect((await client.request('PUT', '/api/eco/prefs/recyclingDay', { value: 9 })).status).toBe(400);
+    expect((await client.request('PUT', '/api/eco/prefs/colour', { value: 1 })).status).toBe(404);
+  });
+
+  it('turns bus events into notifications for the bell', async () => {
+    // Saving the checklist and footprint (above) unlocked two badges; the reports said thanks.
+    const { body } = await client.request('GET', '/api/notifications');
+    const titles = body.items.map((n) => n.title);
+    expect(titles).toEqual(expect.arrayContaining(['Badge unlocked: Prepared', 'Badge unlocked: Footprint Finder', 'Report received: water']));
+    expect(body.items.every((n) => n.forYou)).toBe(true);
+    // Saving again announces nothing new.
+    await client.request('PUT', '/api/alerts/checklist', { value: CHECKLIST.map((item) => item.id) });
+    expect((await client.request('GET', '/api/notifications')).body.items).toHaveLength(body.items.length);
+  });
+
+  it('shows visitors only the notifications meant for everyone', async () => {
+    const { status, body } = await fetch(`${api.baseUrl}/api/notifications`).then(async (r) => ({ status: r.status, body: await r.json() }));
+    expect(status).toBe(200);
+    expect(body.items).toEqual([]);
+  });
+});
+
+describe('event bus wiring', () => {
+  // Every event a module says it emits is really emitted in its code, and
+  // every event someone listens for is emitted by some module.
+  it('matches what the modules declare', async () => {
+    const { readFileSync } = await import('node:fs');
+    const all = MODULES.map((mod) => ({ mod, code: readFileSync(new URL(`./modules/${mod.name}/index.js`, import.meta.url), 'utf8') }));
+    const emitted = new Set(all.flatMap(({ code }) => [...code.matchAll(/bus\.emit\(\s*(?:'([\w.]+)'|[^,]*\? '([\w.]+)' : '([\w.]+)')/g)].flatMap((m) => m.slice(1).filter(Boolean))));
+    for (const { mod } of all) {
+      for (const name of mod.events.emits) expect(emitted, `${mod.name} emits ${name}`).toContain(name);
+      for (const name of mod.events.listens) expect(emitted, `${mod.name} listens for ${name}`).toContain(name);
+    }
   });
 });
 

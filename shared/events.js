@@ -201,7 +201,7 @@ const NAMES = [
 export const fakeAttendeeNames = (count, offset = 0) =>
   Array.from({ length: Math.min(count, NAMES.length) }, (_, i) => NAMES[(i * 5 + offset * 3) % NAMES.length]);
 
-export const isPast = (event, now = new Date()) => new Date(event.endsAt) < now;
+const isPast = (event, now = new Date()) => new Date(event.endsAt) < now;
 
 // What the app shows when the API is down: the same events, nobody "going".
 export const offlineEvents = (now = new Date()) =>

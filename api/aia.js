@@ -36,7 +36,8 @@ function siteCertificate(host, port) {
     const socket = tls.connect({ host, port, servername: host, rejectUnauthorized: false }, () => {
       const cert = socket.getPeerX509Certificate();
       socket.end();
-      cert ? resolve(cert) : reject(new Error('no certificate'));
+      if (cert) resolve(cert);
+      else reject(new Error('no certificate'));
     });
     socket.setTimeout(TIMEOUT_MS, () => socket.destroy(new Error('timed out')));
     socket.on('error', reject);
@@ -48,7 +49,7 @@ const issuerUrl = (cert) => cert.infoAccess?.match(/CA Issuers - URI:(\S+)/)?.[1
 // New roots that Node doesn't ship yet, and where to get a copy signed by an older
 // root Node does trust ("cross-signed"). SAWS's GoDaddy certificate needs the first one.
 // https://certs.godaddy.com/repository
-export const CROSS_SIGNED = {
+const CROSS_SIGNED = {
   'GoDaddy TLS Root CA - R1': 'https://certs.godaddy.com/repository/gd_tls_root-r1-cross-g2.crt.pem',
   'Starfield TLS Root CA - R1': 'https://certs.godaddy.com/repository/sf_tls_root-r1-cross-g2.crt.pem',
 };

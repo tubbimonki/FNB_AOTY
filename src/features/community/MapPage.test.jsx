@@ -24,7 +24,7 @@ describe('Community Map (/map)', () => {
     expect(await screen.findByText('3 pins')).toBeInTheDocument();
     expect(list().getAllByRole('listitem').map((li) => within(li).getByText(/./, { selector: 'p.font-semibold' }).textContent)).toEqual(['Flooded road', 'Clinic', 'Burst pipe']);
     // Legend lists the kinds on the map; OpenStreetMap is "down" here, so demo facilities stay.
-    expect(within(screen.getByRole('list', { name: 'Legend' })).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['⚠️Hazard (unverified)', '📣Community report', '🏠Safe facility']);
+    expect(within(screen.getByRole('list', { name: 'Legend' })).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['⚠️Hazard (unverified)', '📣Community report (unverified)', '🏠Safe facility']);
     expect(await screen.findByText(/Demo facilities: OpenStreetMap could not be reached/)).toBeInTheDocument();
   });
 

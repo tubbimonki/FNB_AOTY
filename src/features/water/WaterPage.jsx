@@ -117,7 +117,8 @@ const MyUsage = ({ logs, addWater, removeWater }) => {
   );
 };
 
-// Placeholder comparison until real area data exists.
+// Your week next to reference figures (goal, SA average, Day Zero limit).
+// There is no public per-suburb usage API, so these are national numbers.
 const Comparison = ({ logs }) => {
   const week = lastWeek(logs);
   const logged = week.filter((d) => d.litres > 0);

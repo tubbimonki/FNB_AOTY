@@ -10,10 +10,10 @@
 // and area, and keep warnings that haven't expired and cover the visitor's
 // spot (CAP polygon) or their province (file name prefix).
 // CAP 1.2 spec: https://docs.oasis-open.org/emergency/cap/v1.2/CAP-v1.2-os.html
-import { createCache, Unavailable } from './cache.js';
+import { createCache } from './cache.js';
 import { getWithAia, MISSING_CHAIN } from './aia.js';
 
-export const DEFAULT_SAWS_URL = 'https://caps.weathersa.co.za/Home/RssFeed';
+const DEFAULT_SAWS_URL = 'https://caps.weathersa.co.za/Home/RssFeed';
 const FRESH_MS = 30 * 60 * 1000;
 const STALE_MS = 6 * 60 * 60 * 1000;
 const COOLDOWN_MS = 15 * 60 * 1000;
@@ -26,7 +26,6 @@ const PROVINCE_CODES = {
   LP: 'Limpopo', MP: 'Mpumalanga', NW: 'North West', NC: 'Northern Cape',
 };
 
-export { Unavailable as SawsUnavailable };
 
 // Province capitals, to guess which province a place is in (nearest wins).
 const PROVINCES = [
@@ -209,7 +208,7 @@ export function createSawsService({ url = DEFAULT_SAWS_URL, fetchImpl = fetch, a
   };
   const current = (w) => (w.expires ? w.expires > now() : w.published === null || now() - w.published < MAX_AGE_MS);
 
-  // -> { warnings, province, fetchedAt, stale }, or throws SawsUnavailable
+  // -> { warnings, province, fetchedAt, stale }, or throws Unavailable
   async function getWarnings(lat, lon) {
     const entry = await cache.get('feed', FRESH_MS, load);
     const province = provinceFor(lat, lon);

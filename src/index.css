@@ -388,3 +388,181 @@
     @apply animate-pop bg-(--accent-soft);
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Motion and nature (landing revamp, 2026-10-26)
+   Everything here is additive. Three ideas, used on every page:
+     1. Soft fade-ins: .rise for things on screen at load (staggered with --i),
+        data-reveal for things further down (useScrollReveal switches it from
+        "wait" to "in" as they scroll into view).
+     2. Nature accents: drifting leaves, hills, a growing plant, a section
+        title underline that grows like a shoot.
+     3. A touch of interactivity: a glow that follows the pointer on linked
+        cards, a small 3D tilt on [data-tilt] cards (usePointerGlow).
+   Reduced motion: the global rule above shortens every animation to 1ms, and
+   the hooks skip their work, so content simply appears.
+--------------------------------------------------------------------------- */
+
+@keyframes rise-in {
+  from { opacity: 0; translate: 0 1rem; filter: blur(3px); }
+  to { opacity: 1; translate: none; filter: none; }
+}
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes draw-line {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes unfold {
+  from { transform: scale(0) rotate(-25deg); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes leaf-fall {
+  0% { transform: translate(0, -10vh) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  50% { transform: translate(var(--sway), 50vh) rotate(160deg); }
+  90% { opacity: 1; }
+  100% { transform: translate(calc(var(--sway) * -0.5), 110vh) rotate(320deg); opacity: 0; }
+}
+@keyframes sway {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+}
+@keyframes slow-zoom {
+  from { scale: 1.14; }
+  to { scale: 1.06; }
+}
+
+/* 1a. On-load stagger: each .rise waits --i steps (110ms each). "backwards"
+   holds the hidden start during the wait, then lets go, so hovers still work. */
+.rise {
+  animation: rise-in 700ms var(--ease-organic) calc(var(--i, 0) * 110ms + 120ms) backwards;
+}
+
+/* 1b. Scroll reveal. Unlayered on purpose, so "wait" beats any utility class. */
+[data-reveal="wait"] {
+  opacity: 0;
+  translate: 0 1.25rem;
+}
+[data-reveal="in"] {
+  animation: rise-in var(--motion-slow) var(--ease-organic) var(--reveal-delay, 0ms) backwards;
+}
+
+/* 2a. Section titles: a short accent "shoot" grows along the underline. */
+.section-title {
+  position: relative;
+}
+.section-title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 4rem;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-glow));
+  transform-origin: left;
+  animation: grow-x 700ms var(--ease-organic) 200ms backwards;
+}
+.section-title[data-reveal="wait"]::after {
+  animation: none;
+  transform: scaleX(0);
+}
+
+/* 2b. Hero photo: a slow settle on load plus the parallax drift (useParallax). */
+.hero-photo {
+  translate: 0 var(--parallax, 0px);
+  animation: slow-zoom 12s var(--ease-organic) both;
+}
+
+/* 2c. Falling leaves (DriftingLeaves). Two passes, then they rest, so the
+   page doesn't keep moving forever (WCAG 2.2.2 asks for that). */
+.leaf-drift {
+  position: absolute;
+  top: 0;
+  opacity: 0;
+  animation: leaf-fall var(--fall, 18s) linear var(--delay, 0s) 2;
+}
+
+/* 2d. Logo: the sprout sways a few times, the ring glows on hover. */
+.sprout-sway {
+  transform-origin: 50% 90%;
+  animation: sway 6s ease-in-out 3;
+}
+.logo-glow {
+  transition: box-shadow var(--motion-slow) var(--ease-organic), scale var(--motion-base) var(--ease-organic);
+}
+.group:hover .logo-glow,
+.logo-glow:hover {
+  box-shadow: 0 0 0 8px rgb(178 230 71 / 0.12), 0 0 40px rgb(178 230 71 / 0.35);
+  scale: 1.04;
+}
+
+/* 2e. Growing plant: stem draws, leaves unfold in turn, then the flower opens.
+   Waits while it (or a parent) is still hidden by the scroll reveal. */
+.grow-plant .grow-stem {
+  stroke-dasharray: 1;
+  animation: draw-line 1100ms var(--ease-organic) 200ms backwards;
+}
+.grow-plant .grow-leaf {
+  transform-box: fill-box;
+  transform-origin: 100% 100%;
+  animation: unfold 600ms var(--ease-organic) calc(700ms + var(--i, 0) * 220ms) backwards;
+}
+.grow-plant .grow-bloom {
+  animation: unfold 700ms var(--ease-organic) 1500ms backwards;
+}
+.grow-plant[data-reveal="wait"] *,
+[data-reveal="wait"] .grow-plant * {
+  animation: none;
+  opacity: 0;
+}
+
+/* 3. Pointer glow on linked cards, and a little tilt on [data-tilt] cards.
+   --mx/--my/--rx/--ry come from usePointerGlow. */
+@layer components {
+  .card-link {
+    background-image: radial-gradient(
+      16rem circle at var(--mx, 50%) var(--my, 50%),
+      color-mix(in srgb, var(--accent-glow) 22%, transparent),
+      transparent 70%
+    );
+    background-size: 0 0;
+    background-repeat: no-repeat;
+  }
+  .card-link:hover {
+    background-size: 100% 100%;
+  }
+  [data-tilt] {
+    transform: perspective(700px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition: transform var(--motion-base) var(--ease-organic), translate var(--motion-base) var(--ease-organic),
+      box-shadow var(--motion-base) var(--ease-organic), border-color var(--motion-base) var(--ease-organic);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leaf-drift { display: none; }
+  .sprout-sway, .hero-photo { animation: none; }
+  [data-tilt] { transform: none; }
+}
+
+/* Wrap-up widgets: the notification bell and the impact tracker.
+   Only motion-safe: classes use these, so reduced-motion turns them off. */
+@theme {
+  --animate-bell: bell 1.6s var(--ease-organic) 2;
+  --animate-leaf-sway: leaf-sway 3.2s ease-in-out infinite;
+
+  /* A short ring, like a bell being nudged, then still. */
+  @keyframes bell {
+    0%, 60%, 100% { transform: rotate(0); }
+    10%, 30% { transform: rotate(14deg); }
+    20%, 40% { transform: rotate(-12deg); }
+  }
+  /* A leaf moving in a light breeze. */
+  @keyframes leaf-sway {
+    0%, 100% { transform: rotate(-6deg); }
+    50% { transform: rotate(6deg); }
+  }
+}

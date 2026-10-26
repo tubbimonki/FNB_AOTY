@@ -108,3 +108,28 @@ describe('GET /api/alerts/saws', () => {
     expect(body).toMatchObject({ enabled: true, items: 1, capFiles: 0 });
   });
 });
+
+describe('area notifications for the bell', () => {
+  const notes = async (place = '') => (await (await fetch(`${api.baseUrl}/api/notifications?place=${place}`)).json()).items;
+
+  it('announces a severe alert once, only for its place', async () => {
+    await getAlerts({ weather: fakeWeather() });
+    await fetch(`${api.baseUrl}/api/alerts?lat=-26.1&lon=28.23&place=Kempton%20Park`); // same alert again
+    const here = await notes('Kempton%20Park');
+    expect(here.filter((n) => n.kind === 'alert').length).toBeGreaterThan(0);
+    expect(new Set(here.map((n) => n.title)).size).toBe(here.length); // no repeats
+    expect(here.every((n) => !n.forYou)).toBe(true);
+    expect(await notes('Durban')).toEqual([]);
+  });
+
+  it('says when the power status changes, not on the first look', async () => {
+    let status = 'ok';
+    const eskom = { enabled: true, getArea: async () => ({ electricity: { status, message: `Power is ${status}`, area: 'Block 14' }, water: null }) };
+    api = await startTestServer({ eskom });
+    await fetch(`${api.baseUrl}/api/services/status`);
+    expect(await notes()).toEqual([]);
+    status = 'outage';
+    await fetch(`${api.baseUrl}/api/services/status`);
+    expect(await notes()).toEqual([expect.objectContaining({ kind: 'service', title: 'Power update for Block 14', body: 'Power is outage' })]);
+  });
+});

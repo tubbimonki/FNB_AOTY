@@ -26,7 +26,7 @@ const shortDate = (date) => new Date(`${date}T12:00`).toLocaleDateString('en-ZA'
 const awardWorth = (a) => [a.points && `+${a.points} pts`, a.premiumDays && `+${a.premiumDays} days Premium`].filter(Boolean).join(' · ');
 
 // The mockup's "Your Impact" page: level, eco-points, badges and history.
-// Points are worked out in this browser for now (see useImpact).
+// Members' points come from the server once their logs are saved (see useImpact).
 const ImpactPage = () => {
   const { user } = useAuth();
   const impact = useImpact();

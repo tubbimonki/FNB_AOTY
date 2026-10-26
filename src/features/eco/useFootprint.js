@@ -1,7 +1,7 @@
 import { useSyncedValue } from '../../hooks/useSynced';
 import { estimateFootprint } from '../../../shared/footprint';
 
-export const FOOTPRINT_KEY = 'eco:footprint';
+const FOOTPRINT_KEY = 'eco:footprint';
 
 // The last saved questionnaire: { answers, total, savedAt } or null.
 // Saved in Postgres when logged in (/api/eco/footprint/mine).

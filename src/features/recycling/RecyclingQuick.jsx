@@ -2,9 +2,8 @@ import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Recycle } from 'lucide-react';
 import Pill from '../../components/ui/Pill';
-import { loadJSON } from '../../services/storage';
 import { ALL_ITEMS, MATERIALS } from './recyclingData';
-import { COLLECTION_KEY, nextCollection } from './collection';
+import { nextCollection, useCollectionDay } from './collection';
 
 const prettyDate = (date) => new Date(`${date}T12:00`).toLocaleDateString('en-ZA', { weekday: 'long', day: 'numeric', month: 'short' });
 
@@ -14,6 +13,7 @@ const prettyDate = (date) => new Date(`${date}T12:00`).toLocaleDateString('en-ZA
 const RecyclingQuick = ({ material = 'plastic', className = '' }) => {
   const titleId = useId();
   const [query, setQuery] = useState('');
+  const [weekday] = useCollectionDay();
   const m = MATERIALS.find((x) => x.id === material) ?? MATERIALS[0];
   const q = query.trim().toLowerCase();
   const results = q ? ALL_ITEMS.filter((r) => r.item.toLowerCase().includes(q)).slice(0, 4) : [];
@@ -24,7 +24,7 @@ const RecyclingQuick = ({ material = 'plastic', className = '' }) => {
         <h2 id={titleId} className="flex items-center gap-2 text-base"><Recycle className="size-4 text-emerald-700" aria-hidden="true" />Recycling</h2>
         <Link to="/eco/recycling" className="text-sm font-semibold">Guide →</Link>
       </div>
-      <p className="text-sm text-slate-600">Next collection: <strong>{prettyDate(nextCollection(loadJSON(COLLECTION_KEY, 2)))}</strong></p>
+      <p className="text-sm text-slate-600">Next collection: <strong>{prettyDate(nextCollection(weekday))}</strong></p>
       <p className="mt-1 text-sm text-slate-600">{m.label}: <strong>{m.bin}</strong></p>
       <label className="mt-3 block">
         <span className="sr-only">Can I recycle it?</span>

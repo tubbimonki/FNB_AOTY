@@ -1,6 +1,6 @@
 # How this app fits together
 
-`README.md` is the quick start; this file explains where things live and where new work goes.
+`README.md` is the quick start and the deploy checklist; this file explains where things live, how the parts talk to each other and where new work goes.
 
 ## Commands
 
@@ -10,14 +10,15 @@ First time only: copy `.env.example` to `.env` and fill in `JWT_SECRET` (the fil
 npm install         # once, or whenever package.json changes
 npm run dev         # website at http://localhost:5173, reloads on save
 npm run api         # (second terminal) API at http://localhost:4000/api/health, restarts on save
-npm test            # run all tests once
+npm test            # run all Vitest tests once
 npm run test:watch  # re-run tests on every save
-npm run lint        # check code for common mistakes
+npm run lint        # oxlint over src, api and shared
 npm run build       # production build into dist/
 npm run check       # lint + test + build, i.e. what CI does. Run before pushing.
 npm start           # production server (see Deploying)
 npm run db:generate # after changing a schema.js: writes the SQL migration (see Database)
-npm run db:import-sqlite  # once: copy accounts from the old data/app.db
+npm run eskom:areas -- "kempton"   # find EskomSePush area and schedule ids
+npm run db:import-sqlite           # once: copy accounts from the old data/app.db
 ```
 
 ## Folder layout
@@ -26,53 +27,57 @@ npm run db:import-sqlite  # once: copy accounts from the old data/app.db
 index.html               the one HTML page; loads src/main.jsx
 src/
   main.jsx               starts React: BrowserRouter + AuthProvider + App
-  App.jsx                every route, all inside <Layout>
-  navItems.js            the five tabs (Home, Map, Eco, Community, More); see "Navigation" below
+  App.jsx                every route, all inside <Layout>, plus the floating ImpactTracker
+  navItems.js            the five tabs (Home, Map, Eco, Community, More) and each tab's colour
   brand.js               the app name (Eco 5.0), tagline and mission
   featureList.js         the feature list on the landing and Features pages
-  index.css              Tailwind, the Eco 5.0 colour tokens and the shared classes (.page, .card, .btn, .pill ...)
-  components/            shared UI: Layout, Header (desktop), BottomNav (phone tabs), Footer, Carousel, Photo, Banner, the landing-page teaser cards
-    ui/                  small building blocks: AppBar (green title bar), Segmented (pill switch), IconChip, ListRow/ListCard, ProgressBar, Pill, LoadState, tones.js
+  index.css              Tailwind, the nature colour tokens, motion keyframes and shared classes (.page, .card, .btn, .pill ...)
+  components/            shared UI: Layout, Header (desktop), BottomNav (phone tabs), Footer, Carousel, Photo, Banner, landing teaser cards
+    ui/                  small building blocks: AppBar (title bar), Segmented, IconChip, ListRow/ListCard, ProgressBar, Pill, LoadState, tones.js, and the nature pieces Vine, DriftingLeaves, Hills, GrowingSprout
   pages/                 public content pages (Home = splash + landing, About, Features, Benefits, More, NotFound)
-  features/              one folder per product feature, holding its pages, hooks and logic
-    green-wallet/        actions.js (the action list), totals.js (maths), useLogs.js (saved logs), TrackerPage.jsx, WalletSummary.jsx (sidebar card)
-    dashboard/           DashboardPage.jsx (photo hero with greeting + weather, alert banner, Quick Access, Shortcuts, latest news), MiniWidget, greeting.js, ReadingPage.jsx (news / guides pages), FeatureStrip, HeadlinesWidget
-    alerts/              AlertsPage (Current / Forecast / Alerts), AlertCard + severity.js, useAlerts (weather + /api/alerts), EmergencyChecklist + checklist.js + useChecklist
-    community/           MapPage + LeafletMap (OpenStreetMap), pinTypes.js, CommunityPage (Nearby / My Reports), ReportPage, EventsCarousel, helpContacts.js
-    services/            ServicesPage (water, electricity, transport, waste from /api/services/status; useFacilities -> /api/services/facilities)
+  features/              one folder per product feature: its pages, hooks and logic
+    alerts/              AlertsPage, AlertCard + severity.js, SourceStatus, useAlerts (/api/alerts), EmergencyChecklist + useChecklist
+    auth/                AuthProvider (talks to /api/auth), useAuth, RequireAuth, AuthShell, LoginPage, RegisterPage
+    community/           MapPage + LeafletMap, pinTypes.js, CommunityPage, ReportPage, events (EventsCarousel, EventPage, EventList, useEvents), Reactions + useReactions
+    dashboard/           DashboardPage (photo hero with greeting, bell, Premium and weather; Quick Access; Shortcuts), ReadingPage (news / guides), MiniWidget, FeatureStrip, HeadlinesWidget
     eco/                 EcoPage (footprint, goals, plant), FootprintPage, useFootprint, GrowingPlant + plantStages.js
-    water/               WaterPage, water.js (goal, uses, maths), useWaterLogs, WeeklyBars
-    recycling/           RecyclingPage, recyclingData.js (what goes where), collection.js (next collection day)
-    impact/              ImpactPage (level, points, badges, history), useImpact (gathers everything for shared/impact.js)
-    weather/             weather.js (places, weather codes, weather alerts, green tips), useWeather.js (calls /api/weather), WeatherCard.jsx
-    news/                newsItems.js (placeholder stories), NewsFeed.jsx
-    guides/              guideItems.js (placeholder guides), GuideList.jsx
-    auth/                AuthProvider (talks to /api/auth), useAuth, RequireAuth, LoginPage, RegisterPage
-  services/              talking to the outside world: api.js (fetch wrapper), storage.js (localStorage)
-  hooks/                 hooks shared by several features: useSynced (personal data in Postgres + a browser copy), useStoredState, useApiData
-  test/                  test setup, renderWithProviders, mockApi (fake API answers in UI tests)
-  assets/                images.js: every photo URL and where each one is used
+    green-wallet/        actions.js, totals.js (maths), useLogs, TrackerPage (rings), ActionPicker, ProgressRings, WalletSummary
+    guides/              guideItems.js (guides with real sources), GuideList, RelatedGuides
+    impact/              ImpactPage (level, points, badges, history), ImpactTracker (the floating leaf), comparisons.js (sourced CO2 comparisons), useImpact, useAwards
+    news/                useNews (/api/news), NewsFeed, newsItems.js
+    notifications/       NotificationBell (dashboard bell) and useNotifications (/api/notifications)
+    recycling/           RecyclingPage, RecyclingQuick, recyclingData.js, collection.js (collection day, saved per member)
+    services/            ServicesPage (/api/services/status), useFacilities (/api/services/facilities), PowerQuick
+    water/               WaterPage, water.js, useWaterLogs, WeeklyBars, WaterQuick
+    weather/             weather.js (places, codes, alerts, tips), useWeather (/api/weather), WeatherCard
+  services/              api.js (fetch wrapper: apiGet/apiPost/apiPut/apiDelete), storage.js (localStorage)
+  hooks/                 shared hooks: useSynced (personal data in Postgres + a browser copy), useStoredState, useApiData, useWide, and the motion hooks useScrollReveal, usePointerGlow, useParallax, useCountUp
+  test/                  test setup, renderWithProviders, mockApi, wideScreen
+  assets/                images.js: every photo URL and where it is used
 api/
-  index.js               starts the Express server (reads .env, opens the database)
-  app.js                 builds the Express app (routes are mounted here)
+  index.js               starts the server: reads .env, opens the database, builds the services, warms caches
+  app.js                 builds the Express app: rate limits, routes, modules, static site, error handler
+  bus.js                 the in-process event bus (see Event bus)
   db.js                  opens Postgres (DATABASE_URL) or local PGlite, then runs the migrations
-  schema.js              core tables (users, api_cache) as Drizzle code; modules keep theirs in modules/<name>/schema.js
-  migrations/            SQL made by `npm run db:generate`. Never edit an old one; add a new one
-  cacheStore.js          the api_cache table, so cached EskomSePush/OpenStreetMap answers survive a restart
+  schema.js              core tables (users, api_cache); modules keep theirs in modules/<name>/schema.js
+  migrations/            SQL made by `npm run db:generate` (plus meta/, which Drizzle needs at runtime). Never edit an old one
+  cache.js               shared cache for outside APIs: fresh copy, one shared call, stale fallback, failure cooldown
+  cacheStore.js          the api_cache table, so cached answers survive a restart and are shared by PC and Render
+  warmup.js              fills the caches at start and every 10 minutes
+  weather.js, airQuality.js   Open-Meteo forecast and air quality
+  eskom.js               EskomSePush area status (planned outages, neighbour reports)
+  facilities.js          nearby clinics, shelters, water points from OpenStreetMap (Overpass, Nominatim fallback)
+  saws.js, aia.js        SA Weather Service warnings feed, and the TLS chain fix it needs
+  news.js                climate stories from RSS feeds, with a bundled snapshot
   users.js               every query about users
   auth/                  passwords.js (bcrypt), tokens.js (JWT + cookie), validate.js
-  middleware/            requireAuth.js: guards members-only API routes
-  weather.js             Open-Meteo client with a 15-minute in-memory cache
-  cache.js               shared cache for upstream APIs (fresh, shared call, stale fallback, failure cooldown), in memory plus api_cache
-  eskom.js               EskomSePush area status (planned outages cached 2 h, neighbour reports 1 h, API v3.1)
-  facilities.js          nearby clinics, shelters, water points etc. from OpenStreetMap Overpass (no key, cached 24 h per place)
-  scripts/eskomAreas.js  npm run eskom:areas finds area and schedule ids for ESKOMSEPUSH_AREA and ESKOMSEPUSH_SCHEDULE
-  scripts/importSqlite.js  npm run db:import-sqlite copies accounts from the old SQLite file
-  routes/                one file per route group (health.js, auth.js, weather.js, news.js)
-  modules/               feature modules (alerts, community, services, eco, wallet, impact): routes, sample data and their tables (schema.js). See api/modules/README.md
-shared/                  pure JS used by both the site and the API: actions.js (Green Wallet actions), checklist.js, footprint.js, impact.js (points and badges), reports.js (report rules), water.js (goal), checks.js (id and date checks)
-  test/                  startTestServer (API + in-memory PGlite, emptied for each server) and a cookie-keeping client
-data/                    pglite/ is the local database when DATABASE_URL is unset. Gitignored, created on first run.
+  middleware/            requireAuth.js (members-only routes, optionalAuth), rateLimit.js (outside-API routes)
+  routes/                health.js, auth.js, weather.js, news.js
+  modules/               feature modules (alerts, community, events, reactions, services, eco, wallet, impact, notifications). See api/modules/README.md
+  scripts/               eskomAreas.js, importSqlite.js
+  test/                  startTestServer (API + in-memory PGlite), a cookie-keeping client, a sample SAWS feed
+shared/                  pure JS used by both the site and the API: actions, checklist, checks, events, footprint, impact (points and badges), reactions, reports, water, weatherAlerts, newsSnapshot
+data/                    pglite/ is the local database when DATABASE_URL is unset. Gitignored
 public/                  copied as-is into the site (favicon)
 karate/                  end-to-end tests, a separate Java project (see Tests)
 render.yaml              Render deploy settings (see Deploying)
@@ -80,81 +85,136 @@ render.yaml              Render deploy settings (see Deploying)
 
 Rule of thumb: if it belongs to one feature, it lives in that feature's folder. Move it to `components/`, `hooks/` or `services/` only once a second feature needs it.
 
+## Event bus
+
+The API is a modular monolith: one server, split into feature modules that never import each other. When something happens, a module announces it on the bus (`await bus.emit('log.created', {...})`) and any module that cares listens (`bus.on('log.created', fn)`). The sender doesn't know who listens, so a new feature can react to old events without touching the old code. `emit` waits for the listeners, so when a request answers, the points and notifications are already saved; a failing listener is logged and never breaks the request.
+
+| Event | Sent by | When | Heard by |
+|---|---|---|---|
+| `log.created` | wallet | new Green Wallet logs (one, or many from a sync) | impact (badge check) |
+| `water.logged` | eco | new water logs | impact |
+| `footprint.saved` | eco | footprint questionnaire saved | impact |
+| `checklist.saved` | alerts | emergency checklist saved | impact |
+| `report.created` | community | a member reports a problem | impact (+5 points), notifications |
+| `event.attended` / `event.cancelled` | events | RSVP added / removed | impact (reward points, Premium days), notifications |
+| `reaction.added` / `reaction.removed` | reactions | 😊 ❤ 👏 🌱 on an event | impact (+2 points / taken back) |
+| `badge.unlocked` | impact | a badge or a new level is reached for the first time | notifications |
+| `service.changed` | services | the area's power or water status changes | notifications (for everyone) |
+| `alert.issued` | alerts | a severe alert for a place, once a day | notifications (for that place) |
+
+Each module lists what it emits and hears in its `events` field, and `api/modules.test.js` checks that every declared event is really emitted. Example chain: logging your fifth walk → `log.created` → impact sees Green Commuter unlocked, saves it in `impact_badges` and says `badge.unlocked` → notifications saves "Badge unlocked: Green Commuter" → the bell shows it.
+
 ## Where new work goes
 
 - **New feature:** make `src/features/<name>/`, put its page there (start it with `<AppBar title=... back=...>`), add a `<Route>` in `App.jsx`, a row on the More page and, if it matters day to day, a tile on the dashboard. If it needs data, add a module in `api/modules/<name>/` (copy an existing one) and read it with `useApiData('/<name>/...')`.
+- **Reacting to something another module does:** don't import it. Listen on the bus in your module's `subscribe({ db, bus })` and add the event to your `events.listens`.
 - **Members-only page:** wrap the route element in `<RequireAuth>` (see `/dashboard` in `App.jsx`).
-- **Auth:** our own, on Express: bcrypt-hashed passwords in Postgres (users table), a signed JWT in an httpOnly cookie. Endpoints: `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`. The frontend only calls `useAuth()` and gets `{ user, status, login, register, logout }`; it never sees the token. Login and register are rate limited (10 tries per 15 minutes per IP). The "why" behind every piece is in the auth notes doc.
-- **Members-only API route:** put `requireAuth({ db, jwtSecret })` before the handler; inside, `req.user` is `{ id, email, name }`. Always filter data by `req.user.id`, never by an id the browser sends.
-- **Navigation:** five tabs from the Eco 5.0 design in `navItems.js`: Home (`/dashboard`), Map, Eco, Community, More. Phones get them in a bottom tab bar (`BottomNav`), desktops in the header. Each item's `match` list says which paths light it up (Eco stays lit on `/tracker` and `/eco/*`). The splash and login pages hide the tab bar. About, Features and Benefits are in the footer and on More.
-- **Feature modules (API):** each module in `api/modules/` owns its routes and tables (`schema.js`), and never imports another module's code (impact only reads the others' tables until the event bus exists). `FEATURES_OFF=community` in `.env` switches one off. Sample data is marked `sample: true` and the pages say so. Code both sides need (footprint maths, points, report rules) lives in `shared/` so the numbers always match.
-- **Essential services:** with `ESKOMSEPUSH_TOKEN`, `ESKOMSEPUSH_SCHEDULE` and `ESKOMSEPUSH_AREA` in `.env`, the Electricity tab on /services shows your area's status (planned outages plus what neighbours report, no stages), and the Water tab goes live too when neighbours report water. Nearby Facilities come from OpenStreetMap near the place picked on the weather card. Transport and waste have no public API, so they are demo data with a "Demo data" pill. The EskomSePush key only allows 50 calls a day, so answers are cached (about 36 calls a day), in memory and in the `api_cache` table, so a restart doesn't spend extra calls.
-- **Dashboard routes (nested, all behind RequireAuth):** `/dashboard` is where login lands: the photo hero (greeting, today's weather, alert bell), the most serious alert, Quick Access (alerts, services, eco, map), Shortcuts (news, guides, Green Wallet) and the latest story; `/dashboard/news` and `/dashboard/guides` are the full lists. `/news`, `/guides` and old `?view=` links redirect there.
-- **Public tools:** `/alerts`, `/map`, `/community`, `/services`, `/eco`, `/eco/footprint`, `/eco/water`, `/eco/recycling`, `/tracker` and `/more` work without an account. `/impact` and `/community/report` need one.
-- **Personal data:** logged in, Green Wallet logs, water logs, the checklist and the footprint are saved in Postgres through `hooks/useSynced.js` (`useSyncedList` for lists, `useSyncedValue` for one value). The browser keeps a copy, so pages show at once, guests can use everything, and offline changes are sent on the next load. Logs carry an id made in the browser, so sending one twice is harmless. Only the recycling day stays in the browser. `/api/impact/me` works out points from the same tables.
-- **Weather:** the browser calls our `GET /api/weather?lat=&lon=`, never Open-Meteo directly. The API rounds the place to about 1 km, caches each place for 15 minutes, shares one upstream call between requests that arrive together, and serves the old copy (marked `stale`) for up to 6 hours if Open-Meteo is down. No API key needed. When the scheduler exists, a job can refresh popular places and emit a `weather.updated` event; the frontend doesn't change.
-- **Alerts:** `useAlerts` joins live weather warnings from `weatherAlerts()` with `GET /api/alerts` (sample data) and sorts them `severe`, `warning`, `info`. Red is only for `severe`. Community events come from `GET /api/community/updates` and show in `EventsCarousel`.
-- **Map:** Leaflet with OpenStreetMap tiles, loaded only on `/map` (`lazy()`), pins drawn as `circleMarker`s. Popups are built with `textContent` because report text comes from users. Tests replace `LeafletMap` with a stand-in (`vi.mock`), since jsdom can't draw maps.
-- **Carousel:** `components/Carousel.jsx` takes `images` (photos) or `items` + `renderItem` (anything). Slides glide sideways, pause on hover, focus or the pause button, start paused for people who turn off animations, and switch from dots to arrows past 6 slides.
-- **Reading pages:** `ReadingPage.jsx` is a 3-column grid on desktop (main list spans 2, sidebar 1). The sidebar shows the other content type (`HeadlinesWidget`) plus `green-wallet/WalletSummary`; add a widget as one more line in the `<aside>`. Swap placeholder news or guides by replacing `newsItems` / `guideItems` with API data of the same shape. `calculateTotalsByDate()` gives per-day numbers for a future weekly chart.
-- **New API route:** add `api/routes/<name>.js` (an Express `Router`), mount it in `api/app.js` under `/api/<name>`, call it from the frontend with `apiGet('/<name>')` from `services/api.js`. Never write `localhost:4000` in the frontend; Vite's proxy forwards `/api`. Handlers can be plain `async` functions: Express 5 sends a thrown error to the error handler in `app.js` by itself.
-- **Headings:** one `<h1>` per page (the `.page-title`), `<h2>` for its sections, `<h3>` inside cards. Screen readers navigate by heading level, so keep the order.
+- **Members-only API route:** put `requireAuth({ db, jwtSecret })` before the handler; inside, `req.user` is `{ id, email, name }`. Always filter by `req.user.id`, never by an id the browser sends. `optionalAuth` is for public routes that answer a bit more for members.
+- **Auth:** our own, on Express: bcrypt-hashed passwords in Postgres, a signed JWT in an httpOnly cookie. `POST /api/auth/register`, `/login`, `/logout`, `GET /api/auth/me`. The frontend only calls `useAuth()`. Login and register allow 10 tries per 15 minutes per IP.
+- **Rate limits:** `/api/weather`, `/api/news`, `/api/alerts` and `/api/services` share one budget of 120 requests per visitor per minute (`api/middleware/rateLimit.js`), so nobody can burn the outside APIs' quotas by asking for many places. Requests from your own computer are not counted outside production, so `npm run dev` and Karate never hit it.
+- **Personal data:** logged in, Green Wallet logs, water logs, the checklist, the footprint and the recycling day are saved in Postgres through `hooks/useSynced.js` (`useSyncedList` for lists, `useSyncedValue` for one value). The browser keeps a copy, so pages show at once, guests can use everything, and offline changes are sent on the next load.
+- **Points, badges and Premium:** the maths lives in `shared/impact.js`, so the page and `GET /api/impact/me` agree. Rewards (events, reactions, reports) are rows in `impact_awards`; Premium days come from event rewards and show on the dashboard, the Impact page and the tracker.
+- **Notification bell:** `GET /api/notifications?place=` returns your own notifications plus the ones for everyone in your place. What's unread is remembered in the browser (the last time you opened the bell). To add a new kind, listen for an event in `api/modules/notifications/index.js`.
+- **Impact tracker:** the leaf in the bottom corner (`features/impact/ImpactTracker.jsx`), on every page except the splash and the forms. Hover or tap shows actions, CO2 and rand saved, and a comparison from `comparisons.js`; each comparison names its source.
+- **Essential services:** with the `ESKOMSEPUSH_*` settings, the Electricity tab is live (planned outages and neighbour reports) and Water goes live when neighbours report it. Facilities come from OpenStreetMap. Transport and waste have no public API, so they stay demo data with a "Demo data" pill and a reason.
+- **Weather and alerts:** the browser only calls our API. `/api/alerts` combines Open-Meteo forecasts, EskomSePush, air quality and SAWS warnings; one source failing or being slow (over 4 s) never hides the others.
+- **Map:** Leaflet with OpenStreetMap tiles, loaded only on `/map`. Popups are built with `textContent` because report text comes from users. Community reports show as unverified.
+- **New API route:** add `api/routes/<name>.js` (an Express `Router`) or a module, mount it in `api/app.js`, call it with `apiGet('/<name>')`. Never write `localhost:4000` in the frontend; Vite's proxy forwards `/api`.
+- **Headings:** one `<h1>` per page, `<h2>` for sections, `<h3>` inside cards.
+
+## Environment variables
+
+All of them are explained in `.env.example`. The ones that matter:
+
+| Name | Needed | What it does |
+|---|---|---|
+| `JWT_SECRET` | always | signs login tokens; long and random |
+| `DATABASE_URL` | production | the Neon connection string; unset = local PGlite in `data/pglite` |
+| `NODE_ENV`, `TRUST_PROXY` | production | `production` serves the built site; `1` behind Render's proxy |
+| `ESKOMSEPUSH_TOKEN`, `ESKOMSEPUSH_SCHEDULE`, `ESKOMSEPUSH_AREA` | optional | live power and water status (50 calls a day, cached in the database) |
+| `DEMO_EMAIL`, `DEMO_PASSWORD`, `DEMO_NAME` | optional | a ready-made login for judges |
+| `FEATURES_OFF` | optional | switch modules off, e.g. `community,impact` |
+| `WARM_PLACE`, `WARM_UP` | optional | where (and whether) the caches are warmed |
+| `NEWS_FEEDS`, `SAWS_CAP_URL`, `OVERPASS_URL` | optional | `off` or another server for those sources |
+| `REACTIONS_DATABASE_URL` | optional | a second database just for event reactions |
 
 ## Tests
 
-Vitest runs tests and React Testing Library renders components in a fake browser (jsdom). Test files sit next to the code they test and end in `.test.js` / `.test.jsx`.
+**Vitest** runs the unit, page and API tests; React Testing Library renders components in jsdom. Test files sit next to the code and end in `.test.js` / `.test.jsx`.
 
-- `src/App.test.jsx`: smoke tests that pages render, Green Wallet logs an action, and `/dashboard` needs login.
-- `src/components/*.test.jsx`: navigation (five tabs, which one is current, hidden on the splash), the carousel (swipe, autoplay, pause, custom slides) and the photo fallback (Photo).
-- `src/features/{alerts,community,services,eco,water,recycling,impact}/*.test.*`: each new page, the checklist, map filters, report form, water maths, collection day and points.
-- `shared/*.test.js`: footprint and points maths. `api/modules.test.js`: every module route, logins, `FEATURES_OFF`, impact from saved data.
-- `api/data.test.js`: the database: logs per user, sync, delete only your own, footprint, checklist, reports surviving a restart, the `api_cache` table and PGlite on disk.
-- `src/hooks/useSynced.test.jsx`: loading from the API, sending offline logs, deletes from another device, guests and offline use.
-- `src/features/green-wallet/totals.test.js`: the CO2 / rand maths.
-- `api/app.test.js`: `/api/health`, JSON 404s, `trustProxy` (real visitor IP, per-visitor rate limit) and serving the built site.
-- `api/weather.test.js`: the weather cache (fresh, shared, stale fallback) with a fake Open-Meteo, and `/api/weather` validation.
-- `src/features/weather/weather.test.js`: weather codes, weather alerts, tips and the alert/community mix.
-- `api/auth.test.js`: register, login, logout, `/me` (including forged and edited tokens) and rate limiting.
-- `src/features/auth/*.test.jsx`: login and sign-up forms, session restore, logout.
-- `src/features/dashboard/DashboardPage.test.jsx`: the hero weather, the alert banner, Quick Access and Shortcuts, the news and guides pages and redirects.
+- `api/*.test.js` start the real Express app on an in-memory PGlite (`startTestServer`): auth, every module, the event bus chain (badges, notifications), rate limits, caches, alerts sources, SAWS, news, facilities, warm-up.
+- `src/**/*.test.jsx` render pages with `renderWithProviders(ui, { route, user })` and fake the API with `mockApi({ 'GET /api/...': [200, body] })`.
+- `shared/*.test.js` check the maths both sides use (footprint, points).
 
-To test a component that uses routing or auth, render it with `renderWithProviders(ui, { route, user })` from `src/test/`. To fake API answers, call `mockApi({ 'POST /api/auth/login': [200, { user }] })` from `src/test/mockApi.js` first.
+**Karate** (`karate/`, Java 17+ and Maven) drives a real Chrome against the running app and calls the real API. `@api` checks the routes, `@ui` the pages, `@mobile` the phone layout, `@network` the photo links. Run it with the app up:
 
-### End-to-end tests (Karate)
+```bash
+npm run api                    # terminal 1
+npm run dev                    # terminal 2
+cd karate && mvn test          # terminal 3 (add "-Dkarate.options=--tags ~@network" when offline)
+```
 
-`karate/` holds a separate Java project that drives a real Chrome against `npm run dev` and calls the real API. One `.feature` file per landing-page part (header, phone tab bar, splash, each section, footer, photos), `pages.feature` for the Eco 5.0 pages, plus `/api/health` and the feature modules. Login and the dashboard have no scenarios yet. Needs Java 17+ and Maven; with `npm run api` and `npm run dev` running, `cd karate && mvn test` (add `"-Dkarate.options=--tags ~@network"` when offline). Setup and a Karate primer are in `karate/README.md`.
+`karate/README.md` has the primer and more options (one file, one tag, watch Chrome).
 
 ## Deploying
 
-The site and the API run as **one** Express server on one origin. In production (`NODE_ENV=production`) Express serves the built `dist/` folder and answers every non-API path with `index.html`, so React Router handles `/dashboard` on a refresh. One origin keeps the session cookie first-party; a site on GitHub Pages calling an API elsewhere would need a third-party cookie, which browsers block.
+The site and the API run as **one** Express server on one origin, so the session cookie stays first-party. In production (`NODE_ENV=production`) Express serves `dist/` and answers every non-API path with `index.html`.
 
-- **Render:** dashboard → New → Blueprint → this repo. `render.yaml` sets the build (`npm ci --include=dev && npm run build`), `npm start`, the health check, `NODE_ENV=production`, `TRUST_PROXY=1` and a generated `JWT_SECRET`.
-- **TRUST_PROXY:** how many proxies sit in front of the server. Behind Render's proxy every request looks like it comes from the proxy, so the login rate limit would block everyone at once. After deploying, open `/api/health/ip`: it should show your real IP. If it shows a private address like `10.x`, raise `TRUST_PROXY` by one.
+- **Render:** dashboard → New → Blueprint → this repo. `render.yaml` sets the build, `npm start`, the health check, `NODE_ENV`, `TRUST_PROXY=1` and a generated `JWT_SECRET`. Fill in `DATABASE_URL` (Neon) and the optional keys on the dashboard. The step-by-step checklist is in README.md.
+- **Why Neon is required in production:** without `DATABASE_URL` the server would fall back to PGlite, whose first boot peaks at about 740 MB of memory, over Render free's 512 MB, so Render kills it. With Neon it runs at about 130 MB. So with `NODE_ENV=production` and no `DATABASE_URL`, `api/index.js` stops at once with "DATABASE_URL is not set" (`ALLOW_PGLITE=1` overrides, on a machine with about 1 GB).
+- **Node and dev packages:** `.node-version` pins Node 22; `.npmrc` with `include=dev` makes even a plain `npm install` fetch Vite while `NODE_ENV=production`.
+- **TRUST_PROXY:** after deploying, `/api/health/ip` should show your real IP. If it shows `10.x`, raise it by one.
 - **Try production locally:** `npm run build`, then in PowerShell `$env:NODE_ENV='production'; npm start` and open http://localhost:4000.
-- **Data:** set `DATABASE_URL` on Render to the Neon connection string (see Database). Without it the app falls back to PGlite on Render's disk, which is wiped on every deploy and restart.
-- **GitHub Pages:** can only host the static site, so login won't work there. CI should keep testing and building, without the Pages deploy.
 
 ## Database
 
-Postgres is the main store. Locally, with no `DATABASE_URL` in `.env`, the API runs **PGlite** (the real Postgres, compiled to WebAssembly) in `data/pglite`, so nothing needs installing. With `DATABASE_URL` it talks to a Postgres server, e.g. **Neon** in production. The same SQL runs on both.
+Postgres is the main store. Without `DATABASE_URL` the API runs **PGlite** (real Postgres compiled to WebAssembly) in `data/pglite`, so nothing needs installing. With it, it talks to a Postgres server such as **Neon**.
 
-- **Tables** are written as Drizzle code: core ones in `api/schema.js`, each module's in `api/modules/<name>/schema.js`. Queries use Drizzle too (`db.select().from(walletLogs).where(eq(walletLogs.userId, id))`); it fills values in as parameters, so there's no SQL injection.
-- **Changing a table:** edit the `schema.js`, run `npm run db:generate`, read the new file in `api/migrations/`, commit both. The API applies new migrations by itself when it starts (Drizzle records which ran in a `drizzle.__drizzle_migrations` table). Never edit a migration that has run somewhere; add a new one.
-- **Looking at the data:** Neon dashboard → Tables, or `psql "$DATABASE_URL"`. For PGlite, stop `npm run api` first (only one program can open `data/pglite` at a time); deleting `data/pglite` starts the local database empty.
-- **Tests** use an in-memory PGlite, one per test file, emptied before each test server. To run the API tests on a real Postgres: `TEST_DATABASE_URL=postgres://... npx vitest run api --no-file-parallelism` (use a throwaway database: the tests empty every table).
-- **Old accounts:** `npm run db:import-sqlite` copies users from the old `data/app.db` (passwords keep working, since the bcrypt hashes move as they are).
+- **Tables** are Drizzle code: core ones in `api/schema.js`, each module's in `api/modules/<name>/schema.js`. Queries use Drizzle too; values go in as parameters, so there's no SQL injection.
+- **Changing a table:** edit the `schema.js`, run `npm run db:generate`, read the new file in `api/migrations/`, commit it together with `migrations/meta/`. The API applies new migrations itself on start.
+- **Looking at the data:** Neon dashboard → Tables, or `psql "$DATABASE_URL"`. For PGlite, stop `npm run api` first.
+- **Tests** use an in-memory PGlite per test file. `TEST_DATABASE_URL=postgres://... npx vitest run api --no-file-parallelism` runs them on a real (throwaway) Postgres.
 
 ## Styling
 
-Tailwind is on (class names like `text-2xl font-bold mb-4`). The Eco 5.0 tokens are defined once in `src/index.css`: `forest-50` to `forest-950` (900 is the title bar green), `sprout` (the lime from the splash), `moss`, `bark`, `canvas` (page background), the Inter font and `tabbar` (tab bar height, as in `pb-tabbar`). The same file holds the shared classes `.page`, `.page-title`, `.section-title`, `.section-label`, `.card`, `.card-link`, `.btn`, `.btn-light`, `.btn-sprout`, `.input`, `.label` and `.pill`. Icons come from `lucide-react`; tinted icon squares use `<IconChip tone="blue">` with the tones in `components/ui/tones.js`. Reach for these before writing one-off utilities; a change there restyles every page at once.
+Tailwind 4. The nature palette is defined once as tokens in `src/index.css` (`forest`, `sprout`, `moss`, `bark`, `canvas`, and Tailwind's own colour names remapped to nature tones, see Motion and nature design), and each bottom tab has its own accent colour (`data-accent`) used by its tab pill, title bar line and vine. Shared classes: `.page`, `.page-title`, `.section-label`, `.card`, `.card-link`, `.btn`, `.btn-light`, `.btn-sprout`, `.input`, `.label`, `.pill`, `.scroll-box`. Icons come from `lucide-react`. Reach for these before writing one-off utilities.
 
 ### Wide desktop screens
-- Every page column uses the `wrap` utility (src/index.css): 1152px up to 1535px wide, then it grows (1408 / 1768 / 2304px at 2xl / 3xl / 4xl). `3xl` (1920px) and `4xl` (2400px) are our own breakpoints.
-- From 1920px the root font size goes up a little (17px, then 18px), so every rem-based size grows with the screen.
-- `useWide()` (src/hooks/useWide.js) is true from 1536px. Pages use it to add quick widgets (WaterQuick, RecyclingQuick, PowerQuick, EventsQuick, RelatedGuides) only where they fit the content, e.g. the water widget beside the water purification guide. Phones and laptops never load them.
-- Tests: `wideScreen()` from src/test/wideScreen.js pretends the screen is wide.
+
+The `wrap` utility grows the content column past 1536px (1408 / 1768 / 2304px at 2xl / 3xl / 4xl). `useWide()` is true from 1536px and adds side columns of quick widgets (WaterQuick, RecyclingQuick, PowerQuick, EventsQuick, RelatedGuides). Tests use `wideScreen()` from `src/test/wideScreen.js`.
+
+## Motion and nature design
+
+The whole app shares one motion system. Most pages get it for free; you only add classes when you want something extra.
+
+**Tokens (src/index.css)**
+- `--ease-organic` (quick start, slow settle) and `--motion-fast / base / slow` (150 / 260 / 450 ms). Use them for every transition, e.g. `duration-(--motion-base) ease-organic`.
+- Nature colours: Tailwind's own names are remapped (`slate` = stone, `emerald` = leaf, `blue` = sky, `cyan` = lagoon, `violet` = heather, `amber` = sun, `red` = clay). `--accent / --accent-soft / --accent-glow` follow the current tab.
+- The "Motion and nature" block at the end of index.css holds the keyframes and classes below.
+
+**What every page gets automatically (Layout.jsx)**
+- `useScrollReveal` (src/hooks/useScrollReveal.js): every `.card`, `.section-title` and `.section-label` below the fold starts hidden (`data-reveal="wait"`) and rises in when it scrolls into view (`data-reveal="in"`), staggered 70 ms apart. Things already on screen are left alone.
+- `usePointerGlow` (src/hooks/usePointerGlow.js): a soft glow follows the mouse over any `.card-link`; `[data-tilt]` cards also tilt a few degrees.
+- Section titles grow a short accent "shoot" along their underline.
+
+**Opt-in pieces**
+- `data-reveal` on any element: make it fade in on scroll. `data-reveal="off"`: never animate it.
+- `className="rise" style={{ '--i': n }}`: fade/rise in on page load, n steps (110 ms) after the first. Use for heroes.
+- `data-tilt` on a `.card-link`: 3D tilt on hover.
+- `useParallax(ref, speed)` + class `hero-photo` on the photo: the photo drifts slower than the page.
+- `useCountUp(target)`: returns `[ref, value]`, counts up once in view.
+- Components in src/components/ui: `DriftingLeaves` (falling leaves behind a hero), `Hills` (two hills fading a photo hero into the page), `GrowingSprout` (plant that grows when it scrolls in), `Vine`.
+
+**Adding it to a new page**
+1. Use `.card`, `.section-title` and `.card-link` as usual: the fade-in and glow come with them.
+2. For a photo hero, copy the landing page (src/pages/Home.jsx): `rise` on each line, `DriftingLeaves`, `Hills`, `useParallax`.
+3. Nothing to do for reduced motion: the hooks skip their work and index.css stops the animations when the system asks for less motion. Never hide content another way: without IntersectionObserver (old browsers, Vitest) everything simply shows.
+
+**Testing**: src/hooks/useScrollReveal.test.jsx fakes IntersectionObserver; src/pages/Home.test.jsx covers the landing cards.
 
 ## Debugging tips
 
-- A blank white page almost always means a JavaScript error. Open DevTools (F12) and read the **Console** tab.
+- A blank white page almost always means a JavaScript error. Open DevTools (F12) → **Console**.
+- The API logs one line per outside source at start (database, EskomSePush, SAWS). `GET /api/features` lists the modules that are on; `GET /api/alerts/saws` shows what the SAWS feed looked like.
+- A 429 from `/api/weather` or `/api/alerts` means the per-minute limit; wait a minute.
 - `npm run check` catches most mistakes before you push.
