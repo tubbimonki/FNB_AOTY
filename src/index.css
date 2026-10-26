@@ -477,6 +477,16 @@
   animation: slow-zoom 12s var(--ease-organic) both;
 }
 
+/* 2b2. Hills at the bottom of a photo hero (Hills.jsx). */
+.hero-hills {
+  position: absolute;
+  inset: auto 0 -1px 0;
+  width: 100%;
+  height: 4rem;
+  pointer-events: none;
+  @media (width >= 40rem) { height: 6rem; }
+}
+
 /* 2c. Falling leaves (DriftingLeaves). Two passes, then they rest, so the
    page doesn't keep moving forever (WCAG 2.2.2 asks for that). */
 .leaf-drift {
