@@ -3,26 +3,25 @@ import jwt from 'jsonwebtoken';
 export const COOKIE_NAME = 'session';
 const MAX_AGE_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
-// The token says "user <id>, valid until <exp>", signed with the secret.
-// Anyone can read the payload; only the server can produce a valid signature.
-export function signToken(userId, secret) {
-  return jwt.sign({ sub: String(userId) }, secret, {
+// The token says "user <id> with this email, valid until <exp>", signed with the secret.
+// The email matters on Render: its disk is wiped on restart, so ids start again
+// at 1 and an old token must not log in as the new user 1.
+export function signToken(user, secret) {
+  return jwt.sign({ sub: String(user.id), email: user.email }, secret, {
     algorithm: 'HS256',
     expiresIn: MAX_AGE_SECONDS,
   });
 }
 
-// Returns the payload ({ sub, iat, exp }) or THROWS if the token is expired,
-// tampered with, or signed with another secret. Pinning algorithms stops a
-// forged token that claims "alg: none" from being accepted.
+// Returns the payload or throws if the token is expired, tampered with, or
+// signed with another secret. Pinning the algorithm blocks forged "alg: none" tokens.
 export function verifyToken(token, secret) {
   return jwt.verify(token, secret, { algorithms: ['HS256'] });
 }
 
-// httpOnly: page JavaScript can't read it (XSS can't steal it).
-// secure: only sent over HTTPS (production only; localhost is plain HTTP).
+// httpOnly: JS can't read it. secure: HTTPS only (production).
 // sameSite lax: not sent on cross-site POSTs (blocks CSRF).
-export function cookieOptions() {
+function cookieOptions() {
   return {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -31,10 +30,10 @@ export function cookieOptions() {
   };
 }
 
-export function setSessionCookie(res, userId, secret) {
-  res.cookie(COOKIE_NAME, signToken(userId, secret), {
+export function setSessionCookie(res, user, secret) {
+  res.cookie(COOKIE_NAME, signToken(user, secret), {
     ...cookieOptions(),
-    maxAge: MAX_AGE_SECONDS * 1000, // Express wants milliseconds here
+    maxAge: MAX_AGE_SECONDS * 1000, // Express wants milliseconds
   });
 }
 

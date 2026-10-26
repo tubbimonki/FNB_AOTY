@@ -1,9 +1,6 @@
-// One place for talking to the Express API. Every call goes to /api/...,
-// which Vite forwards to localhost:4000 in dev (see vite.config.js).
-//
-// Auth needs nothing per call: the session lives in an httpOnly cookie that
-// the browser attaches by itself. `credentials: 'include'` tells fetch to
-// send that cookie even if the API ends up on another domain in production.
+// One place for talking to the Express API (/api/..., proxied to localhost:4000
+// in dev). The session is an httpOnly cookie the browser attaches by itself;
+// credentials: 'include' keeps that working if the API is on another domain.
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api';
 
@@ -36,3 +33,5 @@ async function request(path, { body, ...options } = {}) {
 
 export const apiGet = (path) => request(path);
 export const apiPost = (path, body) => request(path, { method: 'POST', body });
+export const apiPut = (path, body) => request(path, { method: 'PUT', body });
+export const apiDelete = (path) => request(path, { method: 'DELETE' });

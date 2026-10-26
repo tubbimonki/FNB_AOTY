@@ -1,24 +1,14 @@
-import { useEffect, useState } from 'react';
-import { loadJSON, saveJSON } from '../../services/storage';
+import { useSyncedList } from '../../hooks/useSynced';
 
 const STORAGE_KEY = 'green-wallet:logs';
 
-// The user's logged actions, saved in localStorage so they survive a refresh.
-// Each log is { id, actionId, date }. Later this can sync with the API instead.
+// The user's logged actions: in Postgres when logged in (/api/wallet/logs),
+// with a copy in this browser so it works offline and for guests.
+// Each log is { id, actionId, date }.
 export function useLogs() {
-  const [logs, setLogs] = useState(() => loadJSON(STORAGE_KEY, []));
+  const [logs, add, remove] = useSyncedList(STORAGE_KEY, '/wallet/logs');
 
-  useEffect(() => {
-    saveJSON(STORAGE_KEY, logs);
-  }, [logs]);
+  const addLog = (actionId, date) => add({ id: crypto.randomUUID(), actionId, date });
 
-  const addLog = (actionId, date) => {
-    setLogs((current) => [{ id: crypto.randomUUID(), actionId, date }, ...current]);
-  };
-
-  const removeLog = (id) => {
-    setLogs((current) => current.filter((log) => log.id !== id));
-  };
-
-  return { logs, addLog, removeLog };
+  return { logs, addLog, removeLog: remove };
 }

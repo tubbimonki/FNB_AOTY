@@ -17,3 +17,11 @@ export function saveJSON(key, value) {
     // Ignore: the app keeps working, the data just won't survive a refresh.
   }
 }
+
+export function removeKey(key) {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Ignore, as above.
+  }
+}

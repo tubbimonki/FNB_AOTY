@@ -1,52 +1,78 @@
 import { Link } from 'react-router-dom';
+import { ChevronDown, Sprout } from 'lucide-react';
 import NewsSection from '../components/NewsSection';
 import GuidesSection from '../components/GuidesSection';
 import Photo from '../components/Photo';
 import { pageImages } from '../assets/images';
 import { useAuth } from '../features/auth/useAuth';
+import { APP_NAME, MISSION, TAGLINE } from '../brand';
+import { featureList } from '../featureList';
 
-// The public landing page, for onboarding new visitors. The header logo
-// always comes back here. Members get a shortcut to their dashboard instead.
+// The splash screen from the mockup, then the public landing sections.
+// The header logo always comes back here.
+// Glide down to #features instead of jumping. Reduced-motion users get the jump.
+const scrollToFeatures = (event) => {
+  const target = document.getElementById('features');
+  if (!target) return;
+  event.preventDefault();
+  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  // Keep #features in the address bar so the link can still be shared.
+  window.history.replaceState(window.history.state, '', '#features');
+};
+
 const Home = () => {
-  const { user } = useAuth();
+  const { user, status } = useAuth();
 
   return (
     <>
-      {/* Hero: photo in the back, a dark green gradient over it so the text stays readable. */}
-      <section className="relative isolate overflow-hidden px-4 py-16 text-center text-white sm:py-24">
+      {/* Splash: full-screen photo, a dark wash so the lime text stays readable. */}
+      <section className="relative isolate flex min-h-dvh flex-col items-center justify-center overflow-hidden px-6 py-16 text-center lg:min-h-[calc(100dvh-3.75rem)]">
         <Photo image={pageImages.homeHero} background className="absolute inset-0 -z-20 h-full w-full object-cover" />
-        <div className="absolute inset-0 -z-10 bg-linear-to-br from-forest-950/90 via-forest-900/75 to-forest-700/60" />
-        <h2 className="mb-4 text-3xl text-white sm:text-4xl">Protecting Our Planet for Future Generations</h2>
-        <p className="mx-auto mb-8 max-w-2xl text-base text-forest-100 sm:text-lg">
-          Welcome to the central hub for climate awareness. Here, we provide you with the tools and information needed to understand our changing world and take actionable steps toward a sustainable future.
-        </p>
-        {/* Stacked full-width buttons on phones, side by side from sm up. */}
-        <div className="mx-auto flex max-w-xs flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
-          {user ? (
-            <Link to="/dashboard" className="btn btn-light">Go to your dashboard</Link>
+        <div className="absolute inset-0 -z-10 bg-linear-to-b from-forest-950/70 via-forest-950/50 to-forest-950/85" />
+
+        <span className="mb-6 grid size-28 place-items-center rounded-full border-[6px] border-sprout/70 bg-forest-950/60 text-sprout shadow-2xl backdrop-blur-sm" aria-hidden="true">
+          <Sprout className="size-14" strokeWidth={1.5} />
+        </span>
+        <h1 className="mb-2 text-4xl text-sprout sm:text-5xl">{APP_NAME}</h1>
+        <p className="font-semibold text-sprout">{TAGLINE}</p>
+        <p className="mb-10 text-sprout/90">{MISSION}</p>
+
+        {/* The buttons wait for the session check; an invisible copy holds the space meanwhile. */}
+        <div className="flex w-full max-w-xs flex-col gap-3">
+          {status !== 'ready' ? (
+            <span className="btn btn-sprout invisible" aria-hidden="true">Get started</span>
+          ) : user ? (
+            <Link to="/dashboard" className="btn btn-sprout text-lg">Open your dashboard</Link>
           ) : (
-            <Link to="/register" className="btn btn-light">Get started</Link>
+            <>
+              <Link to="/register" className="btn btn-sprout text-lg">Get started</Link>
+              <Link to="/login" className="btn btn-sprout text-lg">Log in</Link>
+            </>
           )}
-          <a href="#features" className="btn border border-forest-300 bg-transparent hover:bg-forest-700">Explore Features</a>
         </div>
+        <a href="#features" onClick={scrollToFeatures} className="mt-8 inline-flex min-h-11 flex-col items-center text-sm text-forest-100 underline">
+          Explore Features
+          <ChevronDown className="size-5 animate-bounce motion-reduce:animate-none" aria-hidden="true" />
+        </a>
       </section>
 
-      <main className="page">
+      <main className="page max-w-4xl">
         <section id="features" className="mb-12">
           <h2 className="section-title">Our Features</h2>
-          <p className="mb-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-          <ul className="leaf-list">
-            <li><strong>Climate Data Tracker:</strong> Real-time monitoring of environmental changes.</li>
-            <li><strong>Interactive Educational Modules:</strong> Learn about ecology and conservation.</li>
-            <li><strong>News & Updates:</strong> Stay informed with global climate news.</li>
-            <li><strong>Water Purification Guides:</strong> Practical solutions for water scarcity.</li>
-            <li><strong>Environmental Benefits Explained:</strong> Understand the impact of a healthy ecosystem.</li>
+          <p className="mb-4">Everything a household needs to get through extreme weather and live a little greener:</p>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {featureList.map((feature) => (
+              <li key={feature.name} className="card">
+                <strong className="text-forest-900">{feature.name}:</strong> {feature.text}
+              </li>
+            ))}
           </ul>
         </section>
 
         <section id="guides" className="mb-12">
           <h2 className="section-title">Useful Guides & Solutions</h2>
-          <p className="mb-6">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris. Vivamus hendrerit arcu sed erat molestie vehicula.</p>
+          <p className="mb-6">Short reads with steps you can follow this week, and the climate stories behind them. Log in to read the full guides and news on your dashboard.</p>
           <div className="grid gap-6 md:grid-cols-2">
             <NewsSection />
             <GuidesSection />

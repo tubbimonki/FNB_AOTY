@@ -6,10 +6,10 @@ import { pageImages } from '../assets/images';
 const About = () => {
   return (
     <main className="page">
-      <h2 className="page-title">About</h2>
+      <h1 className="page-title">About</h1>
 
       <section id="carousel-container" className="my-8">
-        <h3 className="mb-4 text-xl">Nature's Beauty and Resilience</h3>
+        <h2 className="mb-4 text-xl">Nature's Beauty and Resilience</h2>
         <Carousel images={pageImages.aboutGallery} />
       </section>
 

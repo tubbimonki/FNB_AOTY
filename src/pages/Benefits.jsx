@@ -4,7 +4,7 @@ const Benefits = () => {
   return (
     <main className="page">
       <Banner image={pageImages.benefitsBanner} />
-      <h2 className="page-title">Communal Benefits of a Healthy Environment</h2>
+      <h1 className="page-title">Communal Benefits of a Healthy Environment</h1>
       <p className="page-intro">A thriving ecosystem brings a myriad of benefits to communities, ranging from improved public health and economic growth to enhanced cultural richness and social cohesion.</p>
 
       <section id="benefits" className="card mb-8">

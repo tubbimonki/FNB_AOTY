@@ -1,29 +1,42 @@
 import { mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
+import { fileURLToPath } from 'node:url';
 
-// SQLite keeps the whole database in one file (data/app.db), so there is no
-// database server to install. node:sqlite is built into Node 22.13+; it prints
-// an "experimental" warning on start, which is safe to ignore.
-//
-// Each statement runs once on startup. IF NOT EXISTS makes that harmless on
-// every later start. To change a table later, add a new statement below
-// rather than editing an old one (that is what "migrations" are).
-const SCHEMA = `
-  CREATE TABLE IF NOT EXISTS users (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    email         TEXT NOT NULL UNIQUE,
-    name          TEXT NOT NULL,
-    password_hash TEXT NOT NULL,
-    created_at    TEXT NOT NULL DEFAULT (datetime('now'))
-  );
-`;
+const MIGRATIONS = fileURLToPath(new URL('./migrations', import.meta.url));
 
-// Pass ':memory:' for a throwaway database (tests use this).
-export function openDatabase(file = 'data/app.db') {
-  if (file !== ':memory:') mkdirSync(dirname(file), { recursive: true });
-  const db = new DatabaseSync(file);
-  db.exec('PRAGMA foreign_keys = ON;');
-  db.exec(SCHEMA);
+// Opens the database and brings its tables up to date.
+// url set (DATABASE_URL): a real Postgres server, e.g. Neon in production.
+// No url: PGlite, the same Postgres compiled to WebAssembly, running inside
+// Node. It keeps its files in `dir`, or only in memory when dir is ':memory:'
+// (tests). Same SQL either way, so code tested on PGlite runs on Neon.
+// Returns a Drizzle db with db.close() added.
+export async function openDatabase({ url, dir = 'data/pglite' } = {}) {
+  let db;
+  let close;
+  if (url) {
+    const { default: pg } = await import('pg');
+    const { drizzle } = await import('drizzle-orm/node-postgres');
+    const { migrate } = await import('drizzle-orm/node-postgres/migrator');
+    // A pool keeps a few connections open and lends one to each query.
+    const pool = new pg.Pool({ connectionString: url, max: Number(process.env.DATABASE_POOL_MAX ?? 5) });
+    pool.on('error', (err) => console.error('Postgres:', err.message)); // a dropped idle connection shouldn't crash the app
+    db = drizzle({ client: pool });
+    await migrate(db, { migrationsFolder: MIGRATIONS });
+    close = () => pool.end();
+  } else {
+    const { PGlite } = await import('@electric-sql/pglite');
+    const { drizzle } = await import('drizzle-orm/pglite');
+    const { migrate } = await import('drizzle-orm/pglite/migrator');
+    const memory = dir === ':memory:';
+    if (!memory) mkdirSync(dir, { recursive: true });
+    const client = memory ? new PGlite() : new PGlite(dir);
+    db = drizzle({ client });
+    await migrate(db, { migrationsFolder: MIGRATIONS });
+    close = () => client.close();
+  }
+  db.close = close;
+  db.kind = url ? 'postgres' : 'pglite';
   return db;
 }
+
+// Postgres error code for "this would break a UNIQUE rule".
+export const isUniqueViolation = (err) => (err?.code ?? err?.cause?.code) === '23505';

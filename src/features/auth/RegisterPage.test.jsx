@@ -22,7 +22,7 @@ describe('RegisterPage', () => {
 
     await fillForm(user);
 
-    expect(await screen.findByRole('heading', { name: /welcome back/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /^Good (morning|afternoon|evening)/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Log out \(Shella\)/ })).toBeInTheDocument();
 
     expect(lastBodySentTo('/api/auth/register')).toEqual({

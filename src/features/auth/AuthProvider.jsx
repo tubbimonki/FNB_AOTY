@@ -2,19 +2,9 @@ import { useEffect, useState } from 'react';
 import { apiGet, apiPost } from '../../services/api';
 import { AuthContext } from './authContext';
 
-// Real auth, backed by the Express API (api/routes/auth.js).
-//
-// The session token is in an httpOnly cookie, so this code can never read it.
-// Instead it asks the API "who am I?" (GET /auth/me) once on page load, and
-// keeps the answer in `user`. Login, register and logout each call the API,
-// which sets or clears the cookie, then update `user` to match.
-//
-// status: 'loading' until that first check answers, then 'ready'.
-// RequireAuth waits for 'ready' so a logged-in user isn't bounced to /login
-// for a split second on refresh.
-//
-// initialUser (tests only): skip the check and start as this user (or null).
-
+// Auth state, backed by /api/auth. The token is an httpOnly cookie this code
+// can't read, so on load it asks GET /auth/me and keeps the answer in `user`.
+// status: 'loading' until that answer, then 'ready'. initialUser is for tests.
 export function AuthProvider({ children, initialUser }) {
   const skipCheck = initialUser !== undefined;
   const [user, setUser] = useState(initialUser ?? null);
@@ -22,7 +12,7 @@ export function AuthProvider({ children, initialUser }) {
 
   useEffect(() => {
     if (skipCheck) return undefined;
-    let cancelled = false; // ignore the answer if the component unmounted meanwhile
+    let cancelled = false; // ignore the answer if we unmounted meanwhile
 
     apiGet('/auth/me')
       .then((data) => !cancelled && setUser(data.user))
@@ -34,8 +24,7 @@ export function AuthProvider({ children, initialUser }) {
     };
   }, [skipCheck]);
 
-  // Each throws an ApiError on failure (wrong password, email taken...),
-  // so the form that called it can show error.message.
+  // Each throws an ApiError on failure, so the form can show error.message.
   const login = async ({ email, password }) => {
     const data = await apiPost('/auth/login', { email, password });
     setUser(data.user);

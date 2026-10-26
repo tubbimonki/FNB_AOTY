@@ -1,22 +1,11 @@
-// Every photo on the site, in one place.
-//
-// To swap a photo, change its `src` here and nothing else. Two options:
-//   1. A web URL (what we use for now), e.g. 'https://images.unsplash.com/...'
-//   2. A file in the project: put it in src/assets/images/, then
-//        import riverPhoto from './images/river.jpg';
-//      and use  src: riverPhoto  (Vite turns the import into the right URL).
-//
-// Current photos are from Unsplash (https://unsplash.com/license): free to use,
-// including commercially, no permission or credit required. We keep `credit`
-// anyway so it's easy to add a credits line later.
-//
-// If a URL ever breaks, <Photo> shows a green placeholder with the alt text
-// instead of a broken image, so the page still looks fine.
+// Every photo on the site. To swap one, change its `src` here: a URL, or an
+// imported file from src/assets/images/. Photos are from Unsplash (free to use,
+// https://unsplash.com/license). If a URL breaks, <Photo> shows a green box instead.
 
 const unsplash = (id, width = 1600) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=80`;
 
-export const images = {
+const images = {
   forest: {
     src: unsplash('photo-1448375240586-882707db888b'),
     alt: 'Tall trees in a dense green forest',
@@ -49,7 +38,7 @@ export const images = {
   },
 };
 
-// Where each photo is used. Change these to reshuffle without touching pages.
+// Where each photo is used.
 export const pageImages = {
   homeHero: images.forest,
   aboutGallery: [images.forestLight, images.mistyHills, images.valley],
@@ -57,4 +46,9 @@ export const pageImages = {
   guidesBanner: images.mistyHills,
   benefitsBanner: images.field,
   newsBanner: images.valley,
+  dashboardHero: images.forestLight,
+  alertsHero: images.mistyHills,
+  servicesHero: images.field,
+  ecoHero: images.forestLight,
+  waterHero: images.valley,
 };

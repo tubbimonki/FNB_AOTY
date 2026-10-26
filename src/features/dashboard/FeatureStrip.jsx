@@ -2,17 +2,9 @@ import { Link } from 'react-router-dom';
 import { useLogs } from '../green-wallet/useLogs';
 import { calculateTodayTotals } from '../green-wallet/totals';
 
-// The row of three cards at the top of the dashboard. It does two jobs at
-// once so the page needs no separate tab bar:
-//  - it introduces what the app offers (news, guides, Green Wallet), and
-//  - News and Guides switch the main column (?view=news / ?view=guides),
-//    while Green Wallet takes you to the hands-on side of the app.
-// aria-current="page" tells screen readers which view is showing; the same
-// attribute drives the highlighted style.
-//
-// On wide screens (xl) the same list turns into a narrow rail stuck to the
-// left edge: one column, moss background, square left corners so it looks
-// attached to the side of the window, and sticky so it stays in view.
+// The three cards at the top of the news and guides pages: News and Guides
+// switch views (aria-current marks the current one), Green Wallet links to the
+// tracker. From xl the same list becomes a sticky moss rail on the left edge.
 const cardClass = (active) =>
   `flex h-full flex-col rounded-xl border p-3 no-underline transition-colors hover:no-underline sm:p-4 ${
     active
@@ -35,7 +27,7 @@ const FeatureStrip = ({ view }) => {
         {views.map((item) => (
           <li key={item.id}>
             <Link
-              to={`?view=${item.id}`}
+              to={`/dashboard/${item.id}`}
               aria-current={view === item.id ? 'page' : undefined}
               className={cardClass(view === item.id)}
             >

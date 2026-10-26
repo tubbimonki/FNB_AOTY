@@ -1,46 +1,42 @@
 @import "tailwindcss";
+@import "@fontsource-variable/inter";
 
 /*
-  Temporary forest green theme.
-
-  1. @theme defines the colours once. Tailwind turns every --color-* here into
-     utility classes, so --color-forest-700 gives you bg-forest-700,
-     text-forest-700, border-forest-700 and so on. Change a hex value here and
-     the whole site follows.
-  2. @layer base sets defaults for plain HTML tags (body, headings, links).
-  3. @layer components holds a few reusable classes (.btn, .card, ...) for
-     patterns that repeat on many pages. Anything one-off stays as utility
-     classes in the JSX.
-
-  Mobile first: a class with no prefix applies at every width, so it is the
-  phone style. sm: (640px+), md: (768px+) and lg: (1024px+) only add or
-  override from that width upward. Write the phone version first, then
-  widen it.
+  Eco 5.0 theme. @theme defines the design tokens once (Tailwind turns each
+  --color-* into bg-/text-/border- utilities), @layer base styles plain tags,
+  @layer components holds the shared classes (.page, .card, .btn, ...).
+  Mobile first: unprefixed classes are the phone style; sm:/md:/lg: widen it.
 */
 
 @theme {
-  /* Main green scale, light (50) to dark (950). */
-  --color-forest-50: #f1f7f2;
-  --color-forest-100: #dcecdf;
-  --color-forest-200: #bad9c1;
-  --color-forest-300: #8ebd9a;
-  --color-forest-400: #5f9c6f;
-  --color-forest-500: #3f7f51;
-  --color-forest-600: #2f6640;
-  --color-forest-700: #265235;
-  --color-forest-800: #1f422c;
-  --color-forest-900: #183524;
-  --color-forest-950: #0c1e14;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+
+  /* Main green scale, light (50) to dark (950). 900 is the app bar green. */
+  --color-forest-50: #eef6f1;
+  --color-forest-100: #d5eadd;
+  --color-forest-200: #acd5bd;
+  --color-forest-300: #79b893;
+  --color-forest-400: #4a9a6c;
+  --color-forest-500: #2f7f52;
+  --color-forest-600: #226842;
+  --color-forest-700: #1b5537;
+  --color-forest-800: #16452e;
+  --color-forest-900: #103a29;
+  --color-forest-950: #08231a;
 
   /* Supporting colours. */
-  --color-moss: #a8b47c;   /* soft accent, highlights */
-  --color-bark: #7a5a3d;   /* warm brown for small details */
-  --color-cream: #f7f5ee;  /* page background */
+  --color-sprout: #b2e647;   /* lime accent from the splash screen */
+  --color-moss: #a8b47c;     /* soft accent */
+  --color-bark: #7a5a3d;     /* warm brown for small details */
+  --color-canvas: #f4f7f5;   /* page background behind the white cards */
+
+  /* Height of the phone bottom tab bar, so content can leave room for it. */
+  --spacing-tabbar: 4.5rem;
 }
 
 @layer base {
   body {
-    @apply bg-cream text-forest-950 antialiased;
+    @apply bg-canvas font-sans text-forest-950 antialiased;
   }
 
   h1, h2, h3 {
@@ -61,12 +57,11 @@
     overflow-wrap: break-word;
   }
 
-  /* The header is sticky, so jump links (#features) stop below it, not under it. */
+  /* Sticky bars sit on top, so jump links (#features) stop below them. */
   [id] {
     scroll-margin-top: 5rem;
   }
 
-  /* Photos never grow wider than the column they sit in. */
   img {
     @apply max-w-full;
   }
@@ -75,7 +70,7 @@
 @layer components {
   /* Centred content column used by every page. */
   .page {
-    @apply mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 sm:py-10;
+    @apply mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 sm:py-8;
   }
 
   .page-title {
@@ -87,11 +82,22 @@
   }
 
   .section-title {
-    @apply mb-4 border-b border-forest-200 pb-2 text-xl sm:text-2xl;
+    @apply mb-4 border-b border-forest-100 pb-2 text-xl sm:text-2xl;
   }
 
+  /* Small bold heading above a group of cards ("Quick Access", "Get Help"). */
+  .section-label {
+    @apply mb-3 text-base font-bold text-forest-950;
+  }
+
+  /* The white rounded card from the mockup. */
   .card {
-    @apply rounded-xl border border-forest-100 bg-white p-4 shadow-sm sm:p-5;
+    @apply rounded-2xl border border-forest-950/5 bg-white p-4 shadow-[0_1px_3px_rgb(16_58_41/0.08)] sm:p-5;
+  }
+
+  /* A card that is also a link or button. */
+  .card-link {
+    @apply transition hover:-translate-y-0.5 hover:no-underline hover:shadow-md motion-reduce:hover:translate-y-0;
   }
 
   /* Bulleted list with green dots. */
@@ -101,20 +107,43 @@
 
   /* min-h-11 = 44px, Apple's minimum tap target (Android asks for 48dp). */
   .btn {
-    @apply inline-flex min-h-11 items-center justify-center rounded-lg bg-forest-600 px-4 py-2 font-semibold text-white no-underline shadow-sm transition-colors hover:bg-forest-700 hover:no-underline;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-forest-800 px-4 py-2 font-semibold text-white no-underline shadow-sm transition-colors hover:bg-forest-900 hover:no-underline disabled:opacity-60;
   }
 
   .btn-light {
     @apply bg-white text-forest-800 hover:bg-forest-50;
   }
 
-  /* Keep inputs at 16px text or larger: iOS Safari zooms the whole page in
-     when you tap a field with smaller text. */
+  /* Outlined lime button from the splash screen, for dark photo backgrounds. */
+  .btn-sprout {
+    @apply rounded-full border-2 border-sprout bg-forest-950/40 text-sprout backdrop-blur-sm hover:bg-sprout hover:text-forest-950;
+  }
+
+  /* 16px+ text: iOS Safari zooms the page when focusing a smaller input. */
   .input {
-    @apply min-h-11 w-full rounded-lg text-base border border-forest-200 bg-white p-2 focus:border-forest-500;
+    @apply min-h-11 w-full rounded-xl border border-forest-200 bg-white p-2.5 text-base focus:border-forest-500;
   }
 
   .label {
     @apply mb-1 text-sm font-semibold text-forest-800;
+  }
+
+  /* Bounded scroll lists for news and guides: the list scrolls inside its box
+     instead of making the page endless. Phones get the lower limit so the rest
+     of the page stays in reach. tabindex=0 on the box lets keyboards scroll it. */
+  .scroll-box {
+    @apply max-h-80 overflow-y-auto rounded-xl pr-1 focus-visible:outline-2 focus-visible:outline-forest-500 sm:max-h-96;
+    -webkit-overflow-scrolling: touch; /* momentum scroll on older iPhones */
+    scrollbar-width: thin;
+  }
+
+  /* Same for a page's main list: 65% of the screen on phones, almost all of it on desktop. */
+  .scroll-box-tall {
+    @apply max-h-[65dvh] lg:max-h-[calc(100dvh-12rem)];
+  }
+
+  /* Rounded tag such as "On track" or "Level 2". */
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
   }
 }

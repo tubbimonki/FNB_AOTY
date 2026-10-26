@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useApiHealth } from '../hooks/useApiHealth';
+import { APP_NAME } from '../brand';
 
-// The info pages sit here instead of in the header, to keep the nav to two tabs.
+// The info pages sit here instead of in the tabs.
 const infoLinks = [
   { label: 'About', link: '/about' },
   { label: 'Features', link: '/features' },
@@ -12,7 +13,7 @@ const Footer = () => {
   const apiStatus = useApiHealth();
 
   return (
-    <footer className="mt-10 bg-forest-950 sm:mt-16 text-sm text-forest-200">
+    <footer className="mt-10 bg-forest-950 text-sm text-forest-200 sm:mt-16">
       <div className="mx-auto max-w-6xl space-y-1 px-4 py-8 sm:px-6">
         <ul className="mb-3 flex flex-wrap gap-x-4">
           {infoLinks.map((item) => (
@@ -21,7 +22,7 @@ const Footer = () => {
             </li>
           ))}
         </ul>
-        <p>&copy; 2026 Climate Awareness App. All rights reserved.</p>
+        <p>&copy; 2026 {APP_NAME}. All rights reserved.</p>
         <p>Support organizations working on climate solutions.</p>
         <p className="text-forest-400">API: {apiStatus}</p>
       </div>

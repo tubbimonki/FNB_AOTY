@@ -1,21 +1,21 @@
 import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './useAuth';
+import AuthShell from './AuthShell';
 
-// Sign-up form. Same pattern as LoginPage: a controlled form (inputs live in
-// state), preventDefault on submit, call the API through useAuth(), and show
-// the server's message if it says no. The minLength/type checks here are for
-// comfort only; the API validates again because forms can be skipped.
+// Sign-up form. The input checks here are for comfort; the API validates again.
 const RegisterPage = () => {
-  const { register } = useAuth();
+  const { user, register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // One change handler for every field: update('email') returns a handler
-  // that copies the form and replaces just that field.
+  // Already logged in: nothing to do here.
+  if (user) return <Navigate to="/dashboard" replace />;
+
+  // One change handler for every field.
   const update = (field) => (event) => setForm({ ...form, [field]: event.target.value });
 
   const handleSubmit = async (event) => {
@@ -32,33 +32,40 @@ const RegisterPage = () => {
   };
 
   return (
-    <main className="max-w-sm mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-4">Create an account</h2>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+    <AuthShell
+      title="Create an account"
+      footer={
+        <>
+          Already have an account?{' '}
+          <Link to="/login" state={location.state} className="font-semibold text-sprout underline">Log in</Link>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <label className="flex flex-col">
-          <span className="text-sm font-semibold mb-1">Name</span>
+          <span className="label">Name</span>
           <input
             autoComplete="name"
             required
             maxLength={60}
             value={form.name}
             onChange={update('name')}
-            className="border rounded p-2"
+            className="input"
           />
         </label>
         <label className="flex flex-col">
-          <span className="text-sm font-semibold mb-1">Email</span>
+          <span className="label">Email</span>
           <input
             type="email"
             autoComplete="email"
             required
             value={form.email}
             onChange={update('email')}
-            className="border rounded p-2"
+            className="input"
           />
         </label>
         <label className="flex flex-col">
-          <span className="text-sm font-semibold mb-1">Password</span>
+          <span className="label">Password</span>
           <input
             type="password"
             autoComplete="new-password"
@@ -67,32 +74,22 @@ const RegisterPage = () => {
             aria-describedby="password-hint"
             value={form.password}
             onChange={update('password')}
-            className="border rounded p-2"
+            className="input"
           />
         </label>
-        <p id="password-hint" className="text-xs -mt-2">
+        <p id="password-hint" className="-mt-2 text-xs">
           At least 8 characters.
         </p>
         {error && (
-          <p role="alert" className="text-red-700 text-sm">
+          <p role="alert" className="text-sm text-red-700">
             {error}
           </p>
         )}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="bg-green-600 text-white font-semibold rounded px-4 py-2 disabled:opacity-60"
-        >
+        <button type="submit" disabled={submitting} className="btn mt-1">
           {submitting ? 'Creating account…' : 'Create account'}
         </button>
       </form>
-      <p className="mt-4 text-sm">
-        Already have an account?{' '}
-        <Link to="/login" state={location.state} className="underline">
-          Log in
-        </Link>
-      </p>
-    </main>
+    </AuthShell>
   );
 };
 
