@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { HandHeart, Landmark, Phone, Plus, ShieldCheck, Truck, Users } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { CloudLightning, HandHeart, Landmark, Map as MapIcon, Megaphone, Phone, Plus, ShieldCheck, Truck, Users } from 'lucide-react';
 import AppBar from '../../components/ui/AppBar';
 import Segmented from '../../components/ui/Segmented';
 import ListRow, { ListCard } from '../../components/ui/ListRow';
@@ -11,6 +10,9 @@ import { useApiData } from '../../hooks/useApiData';
 import { useAuth } from '../auth/useAuth';
 import { REPORT_CATEGORIES } from '../../../shared/reports';
 import EventsCarousel from './EventsCarousel';
+import EventList from './EventList';
+import { useEvents } from './useEvents';
+import { useReactionSummary } from './useReactions';
 import { ago } from './ago';
 import { EMERGENCY_CONTACTS, RELIEF_LINKS } from './helpContacts';
 
@@ -19,6 +21,26 @@ const UPDATE_ICONS = {
   water: { icon: Truck, tone: 'blue' },
   community: { icon: Users, tone: 'green' },
 };
+
+// Shortcuts to the other community tools added to the app.
+const TOOLS = [
+  { to: '/map', icon: MapIcon, tone: 'green', title: 'Community Map', subtitle: 'Clinics, shelters & water points' },
+  { to: '/community/report', icon: Megaphone, tone: 'red', title: 'Report a problem', subtitle: 'Leaks, potholes, dumping' },
+  { to: '/services', icon: Landmark, tone: 'blue', title: 'Essential Services', subtitle: 'Power & water status' },
+  { to: '/alerts', icon: CloudLightning, tone: 'amber', title: 'Weather Alerts', subtitle: 'Storms, heat & floods' },
+];
+
+const Tools = () => (
+  <nav aria-label="Community tools" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    {TOOLS.map((t) => (
+      <Link key={t.to} to={t.to} className="card card-link flex flex-col gap-2 p-3 text-forest-950 no-underline sm:p-4">
+        <IconChip icon={t.icon} tone={t.tone} />
+        <span className="font-semibold">{t.title}</span>
+        <span className="text-xs text-slate-500 sm:text-sm">{t.subtitle}</span>
+      </Link>
+    ))}
+  </nav>
+);
 
 const Nearby = () => {
   const { status, data, retry } = useApiData('/community/updates');
@@ -47,7 +69,6 @@ const Nearby = () => {
             </ul>
           )}
         </section>
-        {data?.events?.length > 0 && <EventsCarousel events={data.events} />}
       </div>
 
       <section aria-labelledby="help-title">
@@ -122,10 +143,52 @@ const MyReports = () => {
   );
 };
 
-// The mockup's Community screen: Nearby (updates, events, help) and My Reports.
+// Every event: upcoming ones, the ones you're going to, then past ones.
+const Events = ({ events, offline, reactions }) => {
+  const upcoming = events.filter((e) => !e.past);
+  const past = events.filter((e) => e.past);
+  const mine = upcoming.filter((e) => e.going);
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      <div className="space-y-6">
+        {offline && <p className="card text-sm text-slate-600">Showing saved events: the server can't be reached, so you can't sign up right now.</p>}
+        {mine.length > 0 && (
+          <section aria-labelledby="mine-title">
+            <h2 id="mine-title" className="section-label">You're going</h2>
+            <EventList events={mine} label="Events you're going to" reactions={reactions} />
+          </section>
+        )}
+        <section aria-labelledby="upcoming-title">
+          <h2 id="upcoming-title" className="section-label">Upcoming events</h2>
+          {upcoming.length ? <EventList events={upcoming} label="Upcoming events" reactions={reactions} /> : <p className="card text-slate-600">No upcoming events yet.</p>}
+        </section>
+      </div>
+      {past.length > 0 && (
+        <section aria-labelledby="past-title">
+          <h2 id="past-title" className="section-label">Recent events</h2>
+          <EventList events={past} label="Recent events" reactions={reactions} />
+        </section>
+      )}
+    </div>
+  );
+};
+
+const TABS = [
+  { id: 'nearby', label: 'Nearby' },
+  { id: 'events', label: 'Events' },
+  { id: 'mine', label: 'My Reports' },
+];
+
+// The Community tab: event carousel, shortcuts to the community tools, then
+// Nearby (updates and help), Events and My Reports. ?tab=events opens a tab,
+// so the back arrow on an event page returns to the list.
 const CommunityPage = () => {
   const { user } = useAuth();
-  const [view, setView] = useState('nearby');
+  const [params, setParams] = useSearchParams();
+  const view = TABS.some((t) => t.id === params.get('tab')) ? params.get('tab') : 'nearby';
+  const { status, events, offline } = useEvents();
+  const reactions = useReactionSummary();
+  const upcoming = events.filter((e) => !e.past);
 
   return (
     <>
@@ -138,16 +201,29 @@ const CommunityPage = () => {
           </Link>
         }
       />
-      <main className="page space-y-5">
+      <main className="page space-y-6">
+        <section aria-labelledby="events-title">
+          <div className="mb-3 flex items-baseline justify-between gap-2">
+            <h2 id="events-title" className="section-label mb-0">Community events</h2>
+            <Link to="?tab=events" className="text-sm font-semibold">See all</Link>
+          </div>
+          {status === 'loading' && <div className="card"><LoadState status="loading" what="events" /></div>}
+          {status === 'ready' && upcoming.length > 0 && <EventsCarousel events={upcoming} reactions={reactions} />}
+          {status === 'ready' && upcoming.length === 0 && <p className="card text-slate-600">No upcoming events yet.</p>}
+        </section>
+
+        <Tools />
+
         <Segmented
           dark
           label="Show"
           value={view}
-          onChange={setView}
-          className="max-w-sm"
-          options={[{ id: 'nearby', label: 'Nearby' }, { id: 'mine', label: 'My Reports' }]}
+          onChange={(id) => setParams(id === 'nearby' ? {} : { tab: id }, { replace: true })}
+          className="max-w-md"
+          options={TABS}
         />
         {view === 'nearby' && <Nearby />}
+        {view === 'events' && (status === 'ready' ? <Events events={events} offline={offline} reactions={reactions} /> : <div className="card"><LoadState status="loading" what="events" /></div>)}
         {view === 'mine' &&
           (user ? (
             <MyReports />

@@ -13,13 +13,13 @@ const ListRow = ({ icon, tone, title, subtitle, to, href, trailing, className = 
         {subtitle && <span className="block text-sm text-slate-500">{subtitle}</span>}
       </span>
       {trailing}
-      {(to || href) && <ChevronRight className="size-5 shrink-0 text-slate-400" aria-hidden="true" />}
+      {(to || href) && <ChevronRight className="size-5 shrink-0 text-slate-400 transition-transform duration-(--motion-base) ease-organic group-hover/row:translate-x-0.5" aria-hidden="true" />}
     </>
   );
-  const rowClass = `flex min-h-16 items-center gap-3 px-4 py-3 ${className}`;
+  const rowClass = `group/row flex min-h-16 items-center gap-3 px-4 py-3 ${className}`;
 
-  if (to) return <Link to={to} className={`${rowClass} no-underline hover:bg-forest-50 hover:no-underline`}>{body}</Link>;
-  if (href) return <a href={href} className={`${rowClass} no-underline hover:bg-forest-50 hover:no-underline`}>{body}</a>;
+  if (to) return <Link to={to} className={`${rowClass} no-underline transition-colors duration-(--motion-fast) hover:bg-forest-50 hover:no-underline active:bg-forest-100`}>{body}</Link>;
+  if (href) return <a href={href} className={`${rowClass} no-underline transition-colors duration-(--motion-fast) hover:bg-forest-50 hover:no-underline active:bg-forest-100`}>{body}</a>;
   return <div className={rowClass}>{body}</div>;
 };
 

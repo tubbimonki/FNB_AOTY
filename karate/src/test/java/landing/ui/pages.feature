@@ -53,6 +53,16 @@ Feature: Eco 5.0 pages open and show their title bar
     Then match ring contains '9 L'
     And match ring contains '91 L remaining'
 
+  Scenario: An event from the Community carousel opens its own page
+    Given driver baseUrl + '/community'
+    And driver.emulateDevice(phone.width, phone.height, phone.userAgent)
+    When waitFor("//div[@aria-label='Upcoming events']//a").click()
+    Then waitForText('h1', 'Event')
+    And waitFor("//section[@aria-labelledby='reward-title']")
+    And match text("//section[@aria-labelledby='reward-title']") contains 'Reward for going'
+    And match text('main') contains "Who's going"
+    And match text('main') contains 'Log in to attend'
+
   Scenario: The alerts page says where its alerts come from
     Given driver baseUrl + '/alerts'
     When waitForAny(["//ul[@aria-label='Alert sources']", "//p[contains(., 'not real alerts')]", "//p[contains(., 'only forecast warnings')]"])

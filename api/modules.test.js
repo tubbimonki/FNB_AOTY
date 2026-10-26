@@ -18,7 +18,7 @@ describe('feature modules', () => {
 
   it('lists the modules that are switched on', async () => {
     const { body } = await client.request('GET', '/api/features');
-    expect(body.on).toEqual(['alerts', 'community', 'services', 'eco', 'wallet', 'impact']);
+    expect(body.on).toEqual(['alerts', 'community', 'events', 'reactions', 'services', 'eco', 'wallet', 'impact']);
   });
 
   it.each([

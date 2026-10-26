@@ -20,8 +20,9 @@ const BADGES = [
   { id: 'footprint', label: 'Footprint Finder', need: 1, have: (s) => (s.footprintDone ? 1 : 0), hint: 'Work out your carbon footprint' },
 ];
 
-// stats: { actionLogs: [{ category }], waterDaysUnderGoal, checklistDone, footprintDone }
-export function computeImpact({ actionLogs = [], waterDaysUnderGoal = 0, checklistDone = false, footprintDone = false } = {}) {
+// stats: { actionLogs: [{ category }], waterDaysUnderGoal, checklistDone, footprintDone, bonusPoints }
+// bonusPoints: rewards won elsewhere, e.g. for going to a community event.
+export function computeImpact({ actionLogs = [], waterDaysUnderGoal = 0, checklistDone = false, footprintDone = false, bonusPoints = 0 } = {}) {
   const countBy = {};
   for (const log of actionLogs) countBy[log.category] = (countBy[log.category] ?? 0) + 1;
   const stats = { countBy, waterDaysUnderGoal, checklistDone, footprintDone };
@@ -30,7 +31,8 @@ export function computeImpact({ actionLogs = [], waterDaysUnderGoal = 0, checkli
     actionLogs.length * POINTS.action +
     waterDaysUnderGoal * POINTS.waterDay +
     (checklistDone ? POINTS.checklist : 0) +
-    (footprintDone ? POINTS.footprint : 0);
+    (footprintDone ? POINTS.footprint : 0) +
+    bonusPoints;
 
   const levelIndex = Math.min(Math.floor(points / POINTS_PER_LEVEL), LEVEL_TITLES.length - 1);
   const nextAt = (levelIndex + 1) * POINTS_PER_LEVEL;

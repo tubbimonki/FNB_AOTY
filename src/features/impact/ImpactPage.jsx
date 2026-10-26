@@ -1,4 +1,4 @@
-import { Award, Bus, ClipboardList, Droplet, Footprints, Leaf, Recycle, Zap, Check } from 'lucide-react';
+import { Award, Bus, ClipboardList, Crown, Droplet, Footprints, Gift, Leaf, Recycle, Zap, Check } from 'lucide-react';
 import AppBar from '../../components/ui/AppBar';
 import IconChip from '../../components/ui/IconChip';
 import Pill from '../../components/ui/Pill';
@@ -23,6 +23,7 @@ const CATEGORY_LOOK = {
 
 const initials = (name = '') => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('');
 const shortDate = (date) => new Date(`${date}T12:00`).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' });
+const awardWorth = (a) => [a.points && `+${a.points} pts`, a.premiumDays && `+${a.premiumDays} days Premium`].filter(Boolean).join(' · ');
 
 // The mockup's "Your Impact" page: level, eco-points, badges and history.
 // Points are worked out in this browser for now (see useImpact).
@@ -46,6 +47,9 @@ const ImpactPage = () => {
               <div className="mt-1 flex flex-wrap gap-2">
                 <Pill tone="green"><Award className="size-3.5" aria-hidden="true" />{impact.title}</Pill>
                 <Pill tone="amber">Level {impact.level}</Pill>
+                {impact.premiumUntil && (
+                  <Pill tone="purple"><Crown className="size-3.5" aria-hidden="true" />Premium until {new Date(impact.premiumUntil).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })}</Pill>
+                )}
               </div>
             </div>
           </section>
@@ -78,26 +82,42 @@ const ImpactPage = () => {
           </section>
         </div>
 
-        <section aria-labelledby="actions-title">
-          <h2 id="actions-title" className="section-label">Your Actions</h2>
-          {recent.length === 0 ? (
-            <p className="card text-slate-600">Nothing yet. Every action you log in Green Wallet earns 10 points.</p>
-          ) : (
-            <ul className="card divide-y divide-slate-100 p-0 sm:p-0">
-              {recent.map((log) => {
-                const look = CATEGORY_LOOK[log.category] ?? { icon: Check, tone: 'green' };
-                return (
-                  <li key={log.id} className="flex items-center gap-3 px-4 py-3">
-                    <IconChip icon={look.icon} tone={look.tone} size="sm" />
-                    <span className="min-w-0 flex-1"><span className="block font-semibold">{log.label}</span><span className="text-xs text-slate-500">{shortDate(log.date)}</span></span>
-                    <span className="font-bold text-emerald-700">+{log.points} pts</span>
+        <div className="space-y-5">
+          {impact.awards.length > 0 && (
+            <section aria-labelledby="rewards-title">
+              <h2 id="rewards-title" className="section-label">Event Rewards</h2>
+              <ul className="card divide-y divide-slate-100 p-0 sm:p-0">
+                {impact.awards.map((a) => (
+                  <li key={a.source} className="flex items-center gap-3 px-4 py-3">
+                    <IconChip icon={Gift} tone="amber" size="sm" />
+                    <span className="min-w-0 flex-1"><span className="block font-semibold">{a.label}</span><span className="text-xs text-slate-500">{shortDate(a.createdAt.slice(0, 10))}</span></span>
+                    <span className="text-right font-bold text-emerald-700">{awardWorth(a)}</span>
                   </li>
-                );
-              })}
-            </ul>
+                ))}
+              </ul>
+            </section>
           )}
-          <p className="mt-3 text-xs text-slate-500">Points: 10 per action, 20 per day under your water goal, 50 for the emergency checklist, 100 for your footprint.</p>
-        </section>
+          <section aria-labelledby="actions-title">
+            <h2 id="actions-title" className="section-label">Your Actions</h2>
+            {recent.length === 0 ? (
+              <p className="card text-slate-600">Nothing yet. Every action you log in Green Wallet earns 10 points.</p>
+            ) : (
+              <ul className="card divide-y divide-slate-100 p-0 sm:p-0">
+                {recent.map((log) => {
+                  const look = CATEGORY_LOOK[log.category] ?? { icon: Check, tone: 'green' };
+                  return (
+                    <li key={log.id} className="flex items-center gap-3 px-4 py-3">
+                      <IconChip icon={look.icon} tone={look.tone} size="sm" />
+                      <span className="min-w-0 flex-1"><span className="block font-semibold">{log.label}</span><span className="text-xs text-slate-500">{shortDate(log.date)}</span></span>
+                      <span className="font-bold text-emerald-700">+{log.points} pts</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            <p className="mt-3 text-xs text-slate-500">Points: 10 per action, 20 per day under your water goal, 50 for the emergency checklist, 100 for your footprint, plus rewards for going to community events.</p>
+          </section>
+        </div>
       </main>
     </>
   );

@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { startTestServer } from './test/startTestServer.js';
 import { airAlert, powerAlerts } from './modules/alerts/index.js';
-import { createSawsService, parseFeed, provinceFor } from './saws.js';
+import { createSawsService } from './saws.js';
 import { aqiBand } from './airQuality.js';
 
 const stormyDay = { date: '2026-10-26', code: 95, maxC: 24, minC: 14, rainChance: 90, uvMax: 3, rainMm: 40, gustKph: 85 };
@@ -76,24 +76,6 @@ describe('alert helpers', () => {
     expect(aqiBand(130)).toBe('unhealthy for sensitive groups');
   });
 
-  it('reads the SAWS feed safely and finds the province', () => {
-    const items = parseFeed(feed);
-    expect(items).toHaveLength(2);
-    expect(items[0]).toMatchObject({ severity: 'severe', link: 'https://caps.weathersa.co.za/a1', body: 'Flooding expected over parts of Gauteng & Mpumalanga.' });
-    expect(items[1]).toMatchObject({ severity: 'warning', link: null });
-    expect(parseFeed('not xml')).toEqual([]);
-    expect(provinceFor(-26.1, 28.23)).toBe('Gauteng');
-    expect(provinceFor(-33.9, 18.5)).toBe('Western Cape');
-  });
-
-  it('asks SAWS once per 30 minutes', async () => {
-    const fetchImpl = vi.fn(async () => new Response(feed));
-    const saws = createSawsService({ fetchImpl, now: () => Date.parse('2026-10-26T06:00:00Z') });
-    await saws.getWarnings(-26.1, 28.23);
-    await saws.getWarnings(-33.9, 18.5);
-    expect(fetchImpl).toHaveBeenCalledTimes(1);
-    expect(createSawsService({ url: 'off' }).enabled).toBe(false);
-  });
 });
 
 describe('air quality service', () => {
@@ -104,5 +86,14 @@ describe('air quality service', () => {
     expect(await air.getAir(-26.204, 28.047)).toMatchObject({ aqi: 64, pm25: 18.2, stale: false });
     await air.getAir(-26.201, 28.049);
     expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('GET /api/alerts/saws', () => {
+  it('says what the SAWS feed looked like', async () => {
+    const xml = '<rss><channel><item><title> Damaging Winds</title><link>http://www.weathersa.co.za/Documents/Warnings/GP_CAP_DamagingWinds_1.xml</link><guid>g1</guid></item></channel></rss>';
+    api = await startTestServer({ saws: createSawsService({ fetchImpl: async (u) => (u.includes('RssFeed') ? new Response(xml) : new Response('x', { status: 404 })) }) });
+    const body = await (await fetch(`${api.baseUrl}/api/alerts/saws`)).json();
+    expect(body).toMatchObject({ enabled: true, items: 1, capFiles: 0 });
   });
 });

@@ -74,7 +74,7 @@ const Carousel = ({
       <div className="touch-pan-y overflow-hidden" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
         {/* All slides sit in one row; moving the row by -100% per slide makes the glide. */}
         <div
-          className="flex transition-transform duration-700 ease-in-out motion-reduce:transition-none"
+          className="flex transition-transform duration-700 ease-organic motion-reduce:transition-none"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
           {items.map((item, index) => (
@@ -86,7 +86,8 @@ const Carousel = ({
               // Off-screen slides: hidden from screen readers and can't be tabbed into.
               aria-hidden={index !== currentIndex}
               inert={index !== currentIndex}
-              className="w-full shrink-0"
+              // The leaving slide fades a little as it glides out.
+              className={`w-full shrink-0 transition-opacity duration-700 ease-organic ${index === currentIndex ? '' : 'opacity-50'}`}
             >
               {renderItem(item)}
             </div>
@@ -100,7 +101,7 @@ const Carousel = ({
             type="button"
             onClick={() => setPaused(!paused)}
             aria-label={paused ? 'Play slideshow' : 'Pause slideshow'}
-            className="flex h-11 w-11 items-center justify-center text-xs"
+            className="flex h-11 w-11 items-center justify-center text-xs transition-opacity hover:opacity-80"
           >
             {paused ? '▶' : '❚❚'}
           </button>
@@ -115,7 +116,8 @@ const Carousel = ({
                 onClick={() => setCurrentIndex(index)}
                 className="flex h-11 w-11 items-center justify-center"
               >
-                <span className={`h-2.5 w-2.5 rounded-full transition-colors ${index === currentIndex ? 'bg-moss' : 'bg-forest-600'}`} />
+                {/* The current dot stretches into a short pill. */}
+                <span className={`h-2.5 rounded-full transition-all duration-(--motion-base) ease-organic ${index === currentIndex ? 'w-6 bg-moss' : 'w-2.5 bg-forest-600'}`} />
               </button>
             ))
           ) : (

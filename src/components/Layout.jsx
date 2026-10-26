@@ -2,7 +2,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
 import BottomNav from './BottomNav';
-import { navItems } from '../navItems';
+import { navItems, activeTab } from '../navItems';
 
 // Pages without the phone tab bar (the splash and the login forms).
 const NO_TABS = ['/home', '/login', '/register'];
@@ -10,14 +10,18 @@ const NO_TABS = ['/home', '/login', '/register'];
 // Shared frame for every page; <Outlet /> is where the current route renders.
 // pb-tabbar leaves room for the phone tab bar so it never covers content.
 // min-h-dvh, not min-h-screen: on phones 100vh includes the space behind the address bar.
+// data-accent gives the whole page its tab's colour (see index.css).
+// The key restarts the fade-in when you move to another section, but not
+// when you open a page inside the same one (so its state survives).
 const Layout = () => {
   const { pathname } = useLocation();
   const tabs = !NO_TABS.includes(pathname);
+  const section = pathname.split('/')[1];
 
   return (
-    <div className={`flex min-h-dvh flex-col ${tabs ? 'pb-tabbar lg:pb-0' : ''}`}>
+    <div data-accent={activeTab(pathname)?.accent} className={`flex min-h-dvh flex-col ${tabs ? 'pb-tabbar lg:pb-0' : ''}`}>
       <Header navigation={navItems} />
-      <div className="flex-1">
+      <div key={section} className="flex-1 motion-safe:animate-page-in">
         <Outlet />
       </div>
       <Footer />

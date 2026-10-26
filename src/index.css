@@ -30,13 +30,174 @@
   --color-bark: #7a5a3d;     /* warm brown for small details */
   --color-canvas: #f4f7f5;   /* page background behind the white cards */
 
+  /*
+    Nature palette. These reuse Tailwind's own colour names, so every existing
+    bg-blue-50 / text-slate-500 in the app picks up the new tones without
+    touching the pages. Each name maps to something you'd see outside:
+      slate   -> stone (grey with a hint of green)
+      emerald -> leaf
+      blue    -> sky / lake
+      cyan    -> lagoon (water)
+      violet  -> heather (muted berry)
+      amber   -> sun / sand
+      red     -> clay (terracotta, still reads as "danger")
+  */
+  --color-slate-50: #f6f7f4;
+  --color-slate-100: #eceee8;
+  --color-slate-200: #dcdfd6;
+  --color-slate-300: #c2c7bb;
+  --color-slate-400: #8f968a;
+  --color-slate-500: #626a5d;
+  --color-slate-600: #4f564a;
+  --color-slate-700: #3f453b;
+  --color-slate-800: #2c3129;
+  --color-slate-900: #1d211b;
+  --color-slate-950: #111410;
+
+  --color-emerald-50: #f0f7ea;
+  --color-emerald-100: #ddedd0;
+  --color-emerald-200: #bfdca6;
+  --color-emerald-300: #9bc577;
+  --color-emerald-400: #79ac4f;
+  --color-emerald-500: #5c9036;
+  --color-emerald-600: #477229;
+  --color-emerald-700: #3a5e22;
+  --color-emerald-800: #304820;
+  --color-emerald-900: #293d1d;
+  --color-emerald-950: #13210c;
+
+  --color-blue-50: #eff6f9;
+  --color-blue-100: #dbeaf1;
+  --color-blue-200: #b9d6e3;
+  --color-blue-300: #8bbbd0;
+  --color-blue-400: #5b9cb9;
+  --color-blue-500: #3a7fa0;
+  --color-blue-600: #2c6886;
+  --color-blue-700: #25556e;
+  --color-blue-800: #21475a;
+  --color-blue-900: #1e3c4b;
+  --color-blue-950: #132733;
+
+  --color-cyan-50: #edf8f6;
+  --color-cyan-100: #d2eeea;
+  --color-cyan-200: #a6ddd5;
+  --color-cyan-300: #72c4b9;
+  --color-cyan-400: #45a79b;
+  --color-cyan-500: #2c8c81;
+  --color-cyan-600: #22716a;
+  --color-cyan-700: #1f5b56;
+  --color-cyan-800: #1d4a47;
+  --color-cyan-900: #1b3e3c;
+  --color-cyan-950: #0b2524;
+
+  --color-violet-50: #f6f1f5;
+  --color-violet-100: #ece0ea;
+  --color-violet-200: #dbc3d6;
+  --color-violet-300: #c29cb9;
+  --color-violet-400: #a77598;
+  --color-violet-500: #8e5a7f;
+  --color-violet-600: #774769;
+  --color-violet-700: #623a56;
+  --color-violet-800: #523349;
+  --color-violet-900: #462d3f;
+  --color-violet-950: #2a1724;
+
+  --color-amber-50: #fbf6ea;
+  --color-amber-100: #f5e9c8;
+  --color-amber-200: #ebd393;
+  --color-amber-300: #dfb75c;
+  --color-amber-400: #d49d36;
+  --color-amber-500: #c08224;
+  --color-amber-600: #a3661c;
+  --color-amber-700: #834d1b;
+  --color-amber-800: #6c3f1c;
+  --color-amber-900: #5b351b;
+  --color-amber-950: #341a0a;
+
+  --color-red-50: #fbf2ee;
+  --color-red-100: #f6e0d7;
+  --color-red-200: #edc0ae;
+  --color-red-300: #e0987d;
+  --color-red-400: #d0704f;
+  --color-red-500: #bf5434;
+  --color-red-600: #a6412a;
+  --color-red-700: #8a3425;
+  --color-red-800: #722d24;
+  --color-red-900: #5f2922;
+  --color-red-950: #33120e;
+
+  --color-pink-100: #f6e3e0; /* blossom, behind the growing plant */
+
+  /* Motion: one easing curve and three speeds used everywhere.
+     "organic" starts quick and settles slowly, like a branch swinging back. */
+  --ease-organic: cubic-bezier(0.22, 0.8, 0.3, 1);
+  --animate-page-in: page-in 420ms var(--ease-organic) both;
+  --animate-fade-in: fade-in 260ms var(--ease-organic) both;
+  --animate-pop: pop 320ms var(--ease-organic) both;
+
+  @keyframes page-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes pop {
+    from { transform: scale(0.7); opacity: 0.4; }
+    to { transform: none; opacity: 1; }
+  }
+
   /* Height of the phone bottom tab bar, so content can leave room for it. */
   --spacing-tabbar: 4.5rem;
 }
 
+/* Speeds as plain variables, used as duration-(--motion-base). */
+:root {
+  --motion-fast: 150ms;
+  --motion-base: 260ms;
+  --motion-slow: 450ms;
+
+  /* Tab colour. Layout sets data-accent on the page frame and BottomNav on each
+     tab, so the app bar line, the active tab and leaf bullets all match. */
+  --accent: var(--color-forest-600);
+  --accent-soft: var(--color-forest-100);
+  --accent-glow: var(--color-forest-300);
+}
+[data-accent="leaf"] {
+  --accent: var(--color-emerald-700);
+  --accent-soft: var(--color-emerald-100);
+  --accent-glow: var(--color-emerald-300);
+}
+[data-accent="sky"] {
+  --accent: var(--color-blue-700);
+  --accent-soft: var(--color-blue-100);
+  --accent-glow: var(--color-blue-300);
+}
+[data-accent="lagoon"] {
+  --accent: var(--color-cyan-700);
+  --accent-soft: var(--color-cyan-100);
+  --accent-glow: var(--color-cyan-300);
+}
+[data-accent="sun"] {
+  --accent: var(--color-amber-700);
+  --accent-soft: var(--color-amber-100);
+  --accent-glow: var(--color-amber-300);
+}
+[data-accent="heather"] {
+  --accent: var(--color-violet-700);
+  --accent-soft: var(--color-violet-100);
+  --accent-glow: var(--color-violet-300);
+}
+
 @layer base {
+  /* Two faint light pools (sun top left, sky bottom right) instead of flat grey. */
   body {
     @apply bg-canvas font-sans text-forest-950 antialiased;
+    background-image:
+      radial-gradient(60rem 40rem at 0% 0%, rgb(178 230 71 / 0.07), transparent 60%),
+      radial-gradient(50rem 40rem at 100% 100%, rgb(91 156 185 / 0.07), transparent 60%);
+    background-attachment: fixed;
   }
 
   h1, h2, h3 {
@@ -44,7 +205,7 @@
   }
 
   a {
-    @apply text-forest-600 underline-offset-2 hover:underline;
+    @apply text-forest-600 underline-offset-2 transition-colors duration-(--motion-fast) hover:underline;
   }
 
   /* A visible focus ring for keyboard users on every interactive element. */
@@ -64,6 +225,40 @@
 
   img {
     @apply max-w-full;
+  }
+
+  /* Dropdowns (<details>) slide open instead of snapping. interpolate-size lets
+     the browser animate to "auto" height; browsers without it just snap. */
+  @media (prefers-reduced-motion: no-preference) {
+    :root {
+      interpolate-size: allow-keywords;
+      scroll-behavior: smooth;
+    }
+    details::details-content {
+      block-size: 0;
+      overflow: clip;
+      transition: block-size var(--motion-base) var(--ease-organic), content-visibility var(--motion-base) allow-discrete;
+    }
+    details[open]::details-content {
+      block-size: auto;
+    }
+    summary [aria-hidden="true"] {
+      transition: transform var(--motion-base) var(--ease-organic);
+    }
+  }
+
+  /* Cross-fade used by the in-page tabs (Segmented) via the View Transitions API. */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: var(--motion-base);
+    animation-timing-function: var(--ease-organic);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 1ms !important;
+      transition-duration: 1ms !important;
+    }
   }
 }
 
@@ -85,9 +280,14 @@
     @apply mb-4 border-b border-forest-100 pb-2 text-xl sm:text-2xl;
   }
 
-  /* Small bold heading above a group of cards ("Quick Access", "Get Help"). */
+  /* Small bold heading above a group of cards ("Quick Access", "Get Help"),
+     with a little leaf in the current tab's colour. */
   .section-label {
-    @apply mb-3 text-base font-bold text-forest-950;
+    @apply mb-3 flex items-center gap-2 text-base font-bold text-forest-950;
+  }
+  .section-label::before {
+    content: "";
+    @apply size-2.5 shrink-0 rounded-[0_70%_0_70%] bg-(--accent);
   }
 
   /* The white rounded card from the mockup. */
@@ -95,9 +295,9 @@
     @apply rounded-2xl border border-forest-950/5 bg-white p-4 shadow-[0_1px_3px_rgb(16_58_41/0.08)] sm:p-5;
   }
 
-  /* A card that is also a link or button. */
+  /* A card that is also a link or button: lifts a little and picks up the tab colour. */
   .card-link {
-    @apply transition hover:-translate-y-0.5 hover:no-underline hover:shadow-md motion-reduce:hover:translate-y-0;
+    @apply transition duration-(--motion-base) ease-organic hover:-translate-y-0.5 hover:border-(--accent-glow) hover:no-underline hover:shadow-md active:translate-y-0 active:scale-[0.99] motion-reduce:hover:translate-y-0;
   }
 
   /* Bulleted list with green dots. */
@@ -105,9 +305,10 @@
     @apply ml-5 list-disc space-y-2 marker:text-forest-500;
   }
 
-  /* min-h-11 = 44px, Apple's minimum tap target (Android asks for 48dp). */
+  /* min-h-11 = 44px, Apple's minimum tap target (Android asks for 48dp).
+     active:scale gives a soft "press" on tap. */
   .btn {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-forest-800 px-4 py-2 font-semibold text-white no-underline shadow-sm transition-colors hover:bg-forest-900 hover:no-underline disabled:opacity-60;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-forest-800 px-4 py-2 font-semibold text-white no-underline shadow-sm transition duration-(--motion-fast) ease-organic hover:bg-forest-900 hover:no-underline hover:shadow active:scale-[0.97] disabled:opacity-60 disabled:active:scale-100;
   }
 
   .btn-light {
@@ -121,7 +322,7 @@
 
   /* 16px+ text: iOS Safari zooms the page when focusing a smaller input. */
   .input {
-    @apply min-h-11 w-full rounded-xl border border-forest-200 bg-white p-2.5 text-base focus:border-forest-500;
+    @apply min-h-11 w-full rounded-xl border border-forest-200 bg-white p-2.5 text-base transition-[border-color,box-shadow] duration-(--motion-fast) focus:border-forest-500 focus:ring-4 focus:ring-forest-100;
   }
 
   .label {
@@ -135,6 +336,7 @@
     @apply max-h-80 overflow-y-auto rounded-xl pr-1 focus-visible:outline-2 focus-visible:outline-forest-500 sm:max-h-96;
     -webkit-overflow-scrolling: touch; /* momentum scroll on older iPhones */
     scrollbar-width: thin;
+    scrollbar-color: var(--color-forest-200) transparent;
   }
 
   /* Same for a page's main list: 65% of the screen on phones, almost all of it on desktop. */
@@ -145,5 +347,19 @@
   /* Rounded tag such as "On track" or "Level 2". */
   .pill {
     @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+
+  /* Phone tab bar: each tab has its own colour (data-accent on the link). */
+  .tab-link {
+    @apply flex h-full flex-col items-center justify-center gap-1 text-xs text-slate-500 no-underline transition-colors duration-(--motion-base) hover:text-(--accent) hover:no-underline;
+  }
+  .tab-link[aria-current="page"] {
+    @apply font-semibold text-(--accent);
+  }
+  .tab-pill {
+    @apply grid h-7 w-12 place-items-center rounded-full transition-colors duration-(--motion-base) ease-organic;
+  }
+  .tab-link[aria-current="page"] .tab-pill {
+    @apply animate-pop bg-(--accent-soft);
   }
 }

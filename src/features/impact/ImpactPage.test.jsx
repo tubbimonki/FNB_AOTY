@@ -3,6 +3,7 @@ import { screen, within } from '@testing-library/react';
 import App from '../../App';
 import { renderWithProviders } from '../../test/renderWithProviders';
 import { today } from '../green-wallet/totals';
+import { mockApi } from '../../test/mockApi';
 
 const thandi = { id: 1, name: 'Thandi Mokoena' };
 
@@ -25,5 +26,21 @@ describe('Your Impact (/impact)', () => {
     expect(within(badges.getByText('Green Commuter').closest('li')).getByText('Active')).toBeInTheDocument();
     expect(within(badges.getByText('Water Saver').closest('li')).getByText('0 / 3')).toBeInTheDocument();
     expect(within(screen.getByRole('region', { name: 'Your Actions' })).getAllByText('+10 pts')).toHaveLength(5);
+  });
+
+  it('adds event rewards from the server to the points', async () => {
+    mockApi({
+      'GET /api/impact/awards': [200, {
+        awards: [{ source: 'event:clean-c-muizenberg-nov', label: 'Going to Clean C beach clean-up: Muizenberg', points: 1200, premiumDays: 7, createdAt: new Date().toISOString() }],
+        points: 1200,
+        premiumUntil: new Date(Date.now() + 7 * 864e5).toISOString(),
+      }],
+    });
+    renderWithProviders(<App />, { route: '/impact', user: thandi });
+    expect(await screen.findByText('1200 / 1500 points')).toBeInTheDocument();
+    expect(screen.getByText('Green Guardian')).toBeInTheDocument();
+    const rewards = within(screen.getByRole('region', { name: 'Event Rewards' }));
+    expect(rewards.getByText('+1200 pts · +7 days Premium')).toBeInTheDocument();
+    expect(screen.getByText(/Premium until/)).toBeInTheDocument();
   });
 });

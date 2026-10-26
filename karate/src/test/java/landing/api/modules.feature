@@ -10,7 +10,7 @@ Feature: Feature modules on the Express API
     Given path 'features'
     When method get
     Then status 200
-    And match response.on == ['alerts', 'community', 'services', 'eco', 'wallet', 'impact']
+    And match response.on == ['alerts', 'community', 'events', 'reactions', 'services', 'eco', 'wallet', 'impact']
 
   Scenario Outline: GET <route> answers with sample data
     Given path '<route>'

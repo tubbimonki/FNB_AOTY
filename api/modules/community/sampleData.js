@@ -1,4 +1,4 @@
-// SAMPLE map pins, updates and events until real reports come in.
+// SAMPLE map pins and updates until real reports come in.
 // type: 'hazard' | 'facility' | 'water' | 'report'
 
 export const SAMPLE_PINS = [
@@ -19,10 +19,4 @@ export const SAMPLE_UPDATES = [
   { id: 'u1', kind: 'road', title: 'Road reopened on Main Rd', detail: 'Traffic flowing normally', minutesAgo: 120 },
   { id: 'u2', kind: 'water', title: 'Water tanker at Community Centre', detail: 'Dispensing potable water', minutesAgo: 180 },
   { id: 'u3', kind: 'community', title: 'Community clean-up this weekend', detail: '24 volunteers registered', minutesAgo: 300 },
-];
-
-export const SAMPLE_EVENTS = [
-  { id: 'cleanup', title: 'Saturday clean-up at Zoo Lake', body: 'Bags and gloves provided. Bring a water bottle and a friend.', where: 'Zoo Lake, Johannesburg', when: 'Sat 08:00' },
-  { id: 'spekboom', title: 'Spekboom planting day', body: 'Help plant 500 cuttings of the hardy succulent along the school fence.', where: 'Soweto', when: 'Sun 09:00' },
-  { id: 'repair', title: 'Repair café', body: 'Volunteers fix toasters, kettles and clothes for free, so they stay out of landfill.', where: 'Maboneng', when: 'Sat 10:00' },
 ];

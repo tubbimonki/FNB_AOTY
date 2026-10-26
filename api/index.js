@@ -60,6 +60,17 @@ try {
   process.exit(1);
 }
 console.log(db.kind === 'postgres' ? 'Database: Postgres (DATABASE_URL)' : `Database: PGlite in ${pgliteDir} (set DATABASE_URL to use Neon)`);
+
+// Optional: keep event reactions in a database of their own. Unset = the main one.
+let reactionsDb = db;
+if (process.env.REACTIONS_DATABASE_URL) {
+  try {
+    reactionsDb = await openDatabase({ url: process.env.REACTIONS_DATABASE_URL });
+    console.log('Reactions database: Postgres (REACTIONS_DATABASE_URL)');
+  } catch (err) {
+    console.error('Could not open REACTIONS_DATABASE_URL, keeping reactions in the main database:', err.message);
+  }
+}
 if (db.kind === 'pglite' && process.env.NODE_ENV === 'production') {
   console.warn('No DATABASE_URL: data lives on this server\'s disk and is lost when Render restarts.');
 }
@@ -89,12 +100,17 @@ console.log(eskom.enabled ? 'EskomSePush: on' : 'EskomSePush: off (no ESKOMSEPUS
 const facilities = createFacilitiesService({ url: process.env.OVERPASS_URL || undefined, cacheStore });
 
 // Official SAWS warnings feed. SAWS_CAP_URL=off switches it off.
-const saws = createSawsService({ url: process.env.SAWS_CAP_URL || undefined });
+const saws = createSawsService({ url: process.env.SAWS_CAP_URL || undefined, cacheStore });
+if (saws.enabled) {
+  saws.check()
+    .then((c) => console.log(`SAWS: ${c.items} warnings in the feed, read ${c.capFiles} of the newest CAP files`))
+    .catch((err) => console.log(`SAWS: feed not reachable (${err.message}), alerts page leaves it out`));
+}
 
 // Climate news from RSS feeds. NEWS_FEEDS=off shows only the bundled snapshot.
 const news = process.env.NEWS_FEEDS === 'off' ? null : createNewsService();
 
-const server = createApp({ db, jwtSecret: JWT_SECRET, cacheStore, trustProxy, staticDir, featuresOff, eskom, facilities, saws, news }).listen(PORT, () => {
+const server = createApp({ db, reactionsDb, jwtSecret: JWT_SECRET, cacheStore, trustProxy, staticDir, featuresOff, eskom, facilities, saws, news }).listen(PORT, () => {
   console.log(`🚀 Server listening on http://localhost:${PORT}`);
 });
 
@@ -103,6 +119,7 @@ const server = createApp({ db, jwtSecret: JWT_SECRET, cacheStore, trustProxy, st
 for (const signal of ['SIGINT', 'SIGTERM']) {
   process.once(signal, () => {
     server.close(async () => {
+      if (reactionsDb !== db) await reactionsDb.close();
       await db.close();
       process.exit(0);
     });
