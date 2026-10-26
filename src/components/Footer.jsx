@@ -18,7 +18,7 @@ const Footer = () => {
       {/* Two faint vines trailing along the top edge. */}
       <Vine className="pointer-events-none absolute -top-1 left-0 h-10 text-forest-700 opacity-60" />
       <Vine className="pointer-events-none absolute -top-1 right-0 h-10 -scale-x-100 text-forest-700 opacity-60" />
-      <div className="relative mx-auto max-w-6xl space-y-1 px-4 pt-12 pb-8 sm:px-6">
+      <div className="relative wrap space-y-1 px-4 pt-12 pb-8 sm:px-6">
         <ul className="mb-3 flex flex-wrap gap-x-4">
           {infoLinks.map((item) => (
             <li key={item.link}>

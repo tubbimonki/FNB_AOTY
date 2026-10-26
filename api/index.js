@@ -12,6 +12,9 @@ import { hashPassword } from './auth/passwords.js';
 import { normaliseEmail } from './auth/validate.js';
 import { createUser, findUserByEmail } from './users.js';
 import { parseFeatureList } from './modules/index.js';
+import { createWeatherService } from './weather.js';
+import { createAirQualityService } from './airQuality.js';
+import { parsePlace, startWarmup } from './warmup.js';
 
 // Load environment variables from .env (if present). See .env.example.
 dotenv.config();
@@ -51,6 +54,17 @@ if (process.env.NODE_ENV === 'production') {
 // DATABASE_URL (Neon, Supabase, any Postgres) in production. Without it the
 // app runs PGlite, a local Postgres kept in data/pglite, so `npm run api` just works.
 const pgliteDir = process.env.PGLITE_DIR || 'data/pglite';
+// A fresh PGlite needs about 740 MB while it sets itself up, more than Render's
+// free 512 MB, so the server gets killed mid-deploy. Say so plainly instead.
+// ALLOW_PGLITE=1 skips this on a bigger server.
+if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL && process.env.ALLOW_PGLITE !== '1') {
+  console.error(
+    'DATABASE_URL is not set.\n' +
+      'In production the app needs a real Postgres (Neon). On Render: Environment -> add DATABASE_URL\n' +
+      'with the Neon connection string, then redeploy. (ALLOW_PGLITE=1 runs PGlite anyway, needs ~1 GB RAM.)',
+  );
+  process.exit(1);
+}
 let db;
 try {
   db = await openDatabase({ url: process.env.DATABASE_URL, dir: pgliteDir });
@@ -72,7 +86,7 @@ if (process.env.REACTIONS_DATABASE_URL) {
   }
 }
 if (db.kind === 'pglite' && process.env.NODE_ENV === 'production') {
-  console.warn('No DATABASE_URL: data lives on this server\'s disk and is lost when Render restarts.');
+  console.warn('ALLOW_PGLITE=1: data lives on this server\'s disk and is lost when it restarts.');
 }
 const cacheStore = createCacheStore(db);
 
@@ -110,14 +124,26 @@ if (saws.enabled) {
 // Climate news from RSS feeds. NEWS_FEEDS=off shows only the bundled snapshot.
 const news = process.env.NEWS_FEEDS === 'off' ? null : createNewsService();
 
-const server = createApp({ db, reactionsDb, jwtSecret: JWT_SECRET, cacheStore, trustProxy, staticDir, featuresOff, eskom, facilities, saws, news }).listen(PORT, () => {
+// Made here (not inside createApp) so the warm-up below fills the same caches the routes use.
+const weather = createWeatherService();
+const airQuality = createAirQualityService();
+
+const server = createApp({ db, reactionsDb, jwtSecret: JWT_SECRET, cacheStore, trustProxy, staticDir, featuresOff, weather, airQuality, eskom, facilities, saws, news }).listen(PORT, () => {
   console.log(`🚀 Server listening on http://localhost:${PORT}`);
 });
+
+// Fill the outside-data caches now and every 10 minutes, so the first visitor
+// doesn't wait. WARM_PLACE=-26.1,28.23 picks the place; WARM_UP=off stops it.
+let stopWarmup = () => {};
+if (process.env.WARM_UP !== 'off') {
+  stopWarmup = startWarmup({ place: parsePlace(process.env.WARM_PLACE), weather, airQuality, eskom, saws, facilities, news });
+}
 
 // Ctrl+C or a Render deploy: finish open requests, then close the database
 // cleanly (PGlite must flush its files, Postgres frees its connections).
 for (const signal of ['SIGINT', 'SIGTERM']) {
   process.once(signal, () => {
+    stopWarmup();
     server.close(async () => {
       if (reactionsDb !== db) await reactionsDb.close();
       await db.close();

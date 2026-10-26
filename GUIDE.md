@@ -148,6 +148,12 @@ Postgres is the main store. Locally, with no `DATABASE_URL` in `.env`, the API r
 
 Tailwind is on (class names like `text-2xl font-bold mb-4`). The Eco 5.0 tokens are defined once in `src/index.css`: `forest-50` to `forest-950` (900 is the title bar green), `sprout` (the lime from the splash), `moss`, `bark`, `canvas` (page background), the Inter font and `tabbar` (tab bar height, as in `pb-tabbar`). The same file holds the shared classes `.page`, `.page-title`, `.section-title`, `.section-label`, `.card`, `.card-link`, `.btn`, `.btn-light`, `.btn-sprout`, `.input`, `.label` and `.pill`. Icons come from `lucide-react`; tinted icon squares use `<IconChip tone="blue">` with the tones in `components/ui/tones.js`. Reach for these before writing one-off utilities; a change there restyles every page at once.
 
+### Wide desktop screens
+- Every page column uses the `wrap` utility (src/index.css): 1152px up to 1535px wide, then it grows (1408 / 1768 / 2304px at 2xl / 3xl / 4xl). `3xl` (1920px) and `4xl` (2400px) are our own breakpoints.
+- From 1920px the root font size goes up a little (17px, then 18px), so every rem-based size grows with the screen.
+- `useWide()` (src/hooks/useWide.js) is true from 1536px. Pages use it to add quick widgets (WaterQuick, RecyclingQuick, PowerQuick, EventsQuick, RelatedGuides) only where they fit the content, e.g. the water widget beside the water purification guide. Phones and laptops never load them.
+- Tests: `wideScreen()` from src/test/wideScreen.js pretends the screen is wide.
+
 ## Debugging tips
 
 - A blank white page almost always means a JavaScript error. Open DevTools (F12) and read the **Console** tab.

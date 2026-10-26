@@ -11,6 +11,10 @@ import { STATUS } from '../../components/ui/tones';
 import { pageImages } from '../../assets/images';
 import { useApiData } from '../../hooks/useApiData';
 import { useFacilities } from './useFacilities';
+import { useWide } from '../../hooks/useWide';
+import WaterQuick from '../water/WaterQuick';
+import RecyclingQuick from '../recycling/RecyclingQuick';
+import RelatedGuides from '../guides/RelatedGuides';
 
 // One entry per tab. `report` is the report form category it links to.
 const SERVICES = [
@@ -26,6 +30,14 @@ const DEMO_REASON = {
   electricity: 'EskomSePush is not set up (ESKOMSEPUSH_TOKEN in .env).',
   transport: 'Gautrain, Rea Vaya and PUTCO have no open live-status API.',
   waste: 'Pikitup and the metros publish no open collection API.',
+};
+
+// Wide screens only: a third column with the tool and guides that fit the open
+// tab (log water on Water, check a bin on Waste). Transport has nothing to add.
+const EXTRAS = {
+  water: () => <><WaterQuick /><RelatedGuides ids={['g1']} /></>,
+  electricity: () => <RelatedGuides ids={['g2']} title="Save power" />,
+  waste: () => <><RecyclingQuick /><RelatedGuides ids={['g3']} /></>,
 };
 
 const FACILITY_ICONS = { library: BookOpen, water: Droplet, clinic: Stethoscope, hospital: Hospital, shelter: House, police: Shield, fire: Flame };
@@ -62,6 +74,7 @@ const ServicesPage = () => {
   const { status, data, retry } = useApiData('/services/status');
   const nearby = useFacilities();
   const service = SERVICES.find((s) => s.id === tab);
+  const extras = useWide() && EXTRAS[tab];
   const info = data?.services[tab];
   const live = Boolean(data?.live?.includes(tab));
   // Live facilities from OpenStreetMap; the demo list if it can't be reached.
@@ -81,7 +94,7 @@ const ServicesPage = () => {
         {status !== 'ready' ? (
           <div className="card"><LoadState status={status} retry={retry} what="service status" /></div>
         ) : (
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className={`grid gap-5 lg:grid-cols-2 ${extras ? '2xl:grid-cols-3' : ''}`}>
             <div className="space-y-5">
               <StatusCard service={service} info={info} live={live} />
 
@@ -143,6 +156,8 @@ const ServicesPage = () => {
               </section>
               {!live && <p className="text-xs text-slate-500">{info.title} is demo data: {DEMO_REASON[tab]}</p>}
             </div>
+
+            {extras && <aside aria-label={`${service.label} tools`} className="space-y-5">{extras()}</aside>}
           </div>
         )}
       </main>

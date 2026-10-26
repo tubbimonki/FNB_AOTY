@@ -2,6 +2,7 @@ import { ExternalLink } from 'lucide-react';
 
 // The news page's main column: one card per story, in a scroll box with a
 // height limit. Each title opens the full story on the publisher's site.
+// Two columns on wide screens (2xl+).
 const NewsFeed = ({ items }) => {
   if (items.length === 0) {
     return <p className="card text-forest-700/70">No news yet. Check back soon.</p>;
@@ -9,10 +10,10 @@ const NewsFeed = ({ items }) => {
 
   return (
     <div role="group" aria-label="News stories" tabIndex={0} className="scroll-box scroll-box-tall">
-      <ul className="space-y-4">
+      <ul className="space-y-4 2xl:grid 2xl:grid-cols-2 2xl:gap-4 2xl:space-y-0">
         {items.map((item) => (
           <li key={item.id}>
-            <article id={`news-${item.id}`} className="card">
+            <article id={`news-${item.id}`} className="card h-full">
               <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-forest-500">
                 {item.region === 'za' ? 'South Africa' : 'Global'} · {item.topic}{item.date && ` · ${item.date}`}
               </p>

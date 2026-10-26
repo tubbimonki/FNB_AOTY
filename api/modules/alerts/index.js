@@ -26,15 +26,28 @@ const bySeverity = (a, b) => (RANK[a.severity] ?? 3) - (RANK[b.severity] ?? 3);
 const until = (ms) =>
   ms ? `Until ${new Intl.DateTimeFormat('en-ZA', { weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Africa/Johannesburg' }).format(new Date(ms)).replace(',', '')}` : undefined;
 
+// How long one source may take before the page is answered without it.
+// The source keeps loading in the background and fills its cache, so the
+// next visitor gets it. SAWS can take a while on a cold start (CAP files).
+export const SOURCE_DEADLINE_MS = 4000;
+
 // Runs one source. -> { status: 'live' | 'stale' | 'off' | 'unavailable', alerts }
-async function fromSource(name, load) {
+async function fromSource(name, load, deadlineMs) {
+  let timer;
+  const loading = load();
+  loading.catch(() => {}); // a late failure after the deadline is not an error
+  const deadline = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`took longer than ${deadlineMs} ms, answering without it`)), deadlineMs);
+  });
   try {
-    const result = await load();
+    const result = await Promise.race([loading, deadline]);
     if (!result) return { status: 'off', alerts: [] };
     return { status: result.stale ? 'stale' : 'live', alerts: result.alerts };
   } catch (err) {
     console.error(`Alerts (${name}):`, err.message);
     return { status: 'unavailable', alerts: [] };
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -68,7 +81,7 @@ export default {
   name: 'alerts',
   events: { emits: ['alert.issued'], listens: [] },
 
-  router({ db, jwtSecret, weather, eskom, airQuality, saws }) {
+  router({ db, jwtSecret, weather, eskom, airQuality, saws, sourceDeadlineMs = SOURCE_DEADLINE_MS }) {
     const router = Router();
     const auth = requireAuth({ db, jwtSecret });
     const known = new Set(CHECKLIST.map((item) => item.id));
@@ -121,17 +134,17 @@ export default {
           if (!weather) return null;
           const w = await weather.getWeather(lat, lon);
           return { stale: w.stale, alerts: weatherAlerts(w, place) };
-        }),
+        }, sourceDeadlineMs),
         fromSource('power', async () => {
           if (!eskom?.enabled) return null;
           const area = await eskom.getArea();
           return { stale: area.electricity?.stale, alerts: powerAlerts(area) };
-        }),
+        }, sourceDeadlineMs),
         fromSource('air', async () => {
           if (!airQuality) return null;
           const a = await airQuality.getAir(lat, lon);
           return { stale: a.stale, alerts: airAlert(a, place) };
-        }),
+        }, sourceDeadlineMs),
         fromSource('saws', async () => {
           if (!saws?.enabled) return null;
           const s = await saws.getWarnings(lat, lon);
@@ -142,7 +155,7 @@ export default {
               where: s.province, source: 'SA Weather Service', href: w.link, when: until(w.expires),
             })),
           };
-        }),
+        }, sourceDeadlineMs),
       ]);
 
       const sources = { weather: wx.status, power: power.status, air: air.status, saws: official.status };

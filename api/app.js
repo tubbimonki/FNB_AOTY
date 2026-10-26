@@ -28,6 +28,7 @@ import { createNewsService } from './news.js';
 // cacheStore: the api_cache table, so module caches survive a restart.
 // now: the clock, so tests can pretend it's another day.
 // reactionsDb: a separate database for event reactions (defaults to db).
+// sourceDeadlineMs: how long /api/alerts waits for each source (tests shorten it).
 export function createApp({
   db,
   jwtSecret,
@@ -43,6 +44,7 @@ export function createApp({
   featuresOff = [],
   now,
   reactionsDb = db,
+  sourceDeadlineMs,
 }) {
   if (!db) throw new Error('createApp needs a db');
   if (!jwtSecret) throw new Error('createApp needs a jwtSecret');
@@ -61,7 +63,7 @@ export function createApp({
   app.use('/api/news', newsRouter({ news }));
   // One bus per app: modules announce things on it (see api/bus.js).
   const bus = createBus();
-  mountModules(app, { db, reactionsDb, jwtSecret, bus, now, cacheStore, weather, eskom, facilities, airQuality, saws }, featuresOff);
+  mountModules(app, { db, reactionsDb, jwtSecret, bus, now, cacheStore, weather, eskom, facilities, airQuality, saws, sourceDeadlineMs }, featuresOff);
   app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 
   // Production: serve the site from the same origin as the API, so the

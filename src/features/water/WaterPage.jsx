@@ -9,10 +9,13 @@ import { ProgressRings } from '../green-wallet/ProgressRings';
 import { today } from '../green-wallet/totals';
 import { useWaterLogs } from './useWaterLogs';
 import WeeklyBars from './WeeklyBars';
+import { useWide } from '../../hooks/useWide';
+import RelatedGuides from '../guides/RelatedGuides';
 import { DAILY_GOAL_L, SA_AVERAGE_L, WATER_USES, lastWeek, litresByDate } from './water';
 
 const MyUsage = ({ logs, addWater, removeWater }) => {
   const [custom, setCustom] = useState('');
+  const wide = useWide();
   const date = today();
   const used = litresByDate(logs)[date] ?? 0;
   const percent = Math.round((used / DAILY_GOAL_L) * 100);
@@ -26,7 +29,7 @@ const MyUsage = ({ logs, addWater, removeWater }) => {
   };
 
   return (
-    <div className="grid gap-5 lg:grid-cols-2">
+    <div className="grid gap-5 lg:grid-cols-2 2xl:grid-cols-3">
       <div className="space-y-5">
         <section aria-label="Today's water" className="relative isolate overflow-hidden rounded-3xl p-5 shadow-md">
           <Photo image={pageImages.waterHero} background className="absolute inset-0 -z-20 h-full w-full object-cover" />
@@ -102,6 +105,14 @@ const MyUsage = ({ logs, addWater, removeWater }) => {
           <span><strong>Tip:</strong> a family of four using 100 L each a day saves over 1 000 litres a month by cutting just 10%.</span>
         </p>
       </div>
+
+      {/* Wide screens: the comparison and the water guides sit alongside. */}
+      {wide && (
+        <aside aria-label="More on water" className="space-y-5">
+          <Comparison logs={logs} />
+          <RelatedGuides ids={['g1', 'g5']} title="Water guides" />
+        </aside>
+      )}
     </div>
   );
 };

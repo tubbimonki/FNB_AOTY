@@ -140,6 +140,26 @@ describe('api_cache table', () => {
     expect(entry).toMatchObject({ value: 'old', stale: true });
   });
 
+  it('lets two servers on one database share an answer instead of both calling upstream', async () => {
+    const db = await testDatabase();
+    const store = createCacheStore(db);
+    let t = Date.now();
+    const now = () => t;
+    let calls = 0;
+    const load = async () => ({ calls: ++calls });
+    const pc = createCache({ staleMs: 1000, cooldownMs: 0, store, name: 'eskom', now });
+    const render = createCache({ staleMs: 1000, cooldownMs: 0, store, name: 'eskom', now });
+
+    await pc.get('k', 100, load);
+    await render.get('k', 100, load); // finds the PC's answer in the table
+    expect(calls).toBe(1);
+
+    t += 150; // both are past fresh now
+    expect((await render.get('k', 100, load)).value).toEqual({ calls: 2 }); // Render refreshes
+    expect((await pc.get('k', 100, load)).value).toEqual({ calls: 2 }); // the PC reuses it
+    expect(calls).toBe(2);
+  });
+
   it('never breaks the page when the table fails', async () => {
     const broken = { select: () => { throw new Error('db down'); }, insert: () => { throw new Error('db down'); } };
     const cache = createCache({ staleMs: 100, cooldownMs: 0, store: createCacheStore(broken), name: 'x' });

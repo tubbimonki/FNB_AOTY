@@ -1,4 +1,4 @@
-import { useCallback, useContext, useState } from 'react';
+import { useCallback, useContext, useEffect, useId, useRef, useState } from 'react';
 import { AuthContext } from '../features/auth/authContext';
 import { loadJSON, saveJSON } from '../services/storage';
 
@@ -9,16 +9,37 @@ export const userKey = (key, user) => (user ? `${key}:u${user.id}` : key);
 
 // Like useState, but saved under the current user's key. When the user
 // changes (log in or out) it reloads that user's copy.
+// Two components using the same key stay in step: a change in one is
+// announced on window ("stored-state") and the others pick it up.
 export function useStoredState(key, fallback) {
   const user = useContext(AuthContext)?.user ?? null;
   const fullKey = userKey(key, user);
   const [state, setState] = useState(() => ({ key: fullKey, value: load(fullKey, key, fallback) }));
+  const source = useId();
+  const changedHere = useRef(false);
 
   // Switched user: read their copy (setState during render is React's
   // recommended way to reset state from a changed prop).
   if (state.key !== fullKey) setState({ key: fullKey, value: load(fullKey, key, fallback) });
 
+  // Tell the other copies after our own change lands.
+  useEffect(() => {
+    if (!changedHere.current) return;
+    changedHere.current = false;
+    window.dispatchEvent(new CustomEvent('stored-state', { detail: { key: state.key, value: state.value, source } }));
+  }, [state, source]);
+
+  // Pick up changes made by the other copies.
+  useEffect(() => {
+    const onChange = ({ detail }) => {
+      if (detail.key === fullKey && detail.source !== source) setState({ key: fullKey, value: detail.value });
+    };
+    window.addEventListener('stored-state', onChange);
+    return () => window.removeEventListener('stored-state', onChange);
+  }, [fullKey, source]);
+
   const setValue = useCallback((next) => {
+    changedHere.current = true;
     setState((current) => {
       const value = typeof next === 'function' ? next(current.value) : next;
       saveJSON(current.key, value);

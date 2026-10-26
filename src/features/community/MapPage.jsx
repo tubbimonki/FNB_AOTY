@@ -6,6 +6,8 @@ import LoadState from '../../components/ui/LoadState';
 import { useApiData } from '../../hooks/useApiData';
 import { useWeather } from '../weather/useWeather';
 import { useFacilities } from '../services/useFacilities';
+import { useWide } from '../../hooks/useWide';
+import EventsQuick from './EventsQuick';
 import { FILTERS, PIN_TYPES, distanceKm, filterPins, withFacilities } from './pinTypes';
 
 // Leaflet is big, so it loads only when someone opens the map ("code splitting").
@@ -20,6 +22,7 @@ const MapPage = () => {
   const { status, data, retry } = useApiData('/community/pins');
   const nearby = useFacilities(place); // real clinics, halls etc. from OpenStreetMap
   const places = nearby.status === 'ready' ? nearby.data.places : null;
+  const wide = useWide();
 
   const pins = data ? filterPins(withFacilities(data.pins, places), filter) : [];
   // Legend: only the kinds of pin on the map right now.
@@ -38,7 +41,7 @@ const MapPage = () => {
   return (
     <>
       <AppBar title="Community Map" back="/dashboard" action={<AppBarButton icon={LocateFixed} label="Centre on my location" onClick={locate} />} />
-      <main className="page grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <main className="page grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_26rem] 2xl:gap-6">
         <div className="space-y-3">
           <div role="group" aria-label="Filter pins" className="flex gap-2 overflow-x-auto pb-1">
             {FILTERS.map((f) => (
@@ -58,7 +61,7 @@ const MapPage = () => {
 
           <div className="card overflow-hidden p-0 sm:p-0">
             <Suspense fallback={<div className="grid h-[55dvh] place-items-center text-slate-500">Loading map…</div>}>
-              <LeafletMap center={place} pins={pins} className="h-[55dvh] min-h-80 w-full lg:h-[34rem]" />
+              <LeafletMap center={place} pins={pins} className="h-[55dvh] min-h-80 w-full lg:h-[34rem] 2xl:h-[44rem]" />
             </Suspense>
             <ul aria-label="Legend" className="grid grid-cols-2 gap-2 border-t border-slate-100 p-3 text-sm">
               {shownTypes.map((type) => (
@@ -99,6 +102,7 @@ const MapPage = () => {
               : nearby.status === 'loading' ? 'Loading real facilities from OpenStreetMap… ' : 'Demo facilities: OpenStreetMap could not be reached. '}
             {data?.sample && 'Hazards and reports are sample pins until real reports come in.'}
           </p>
+          {wide && <EventsQuick />}
         </section>
       </main>
     </>

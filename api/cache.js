@@ -5,6 +5,9 @@
 // - cooldown: after a failure, don't ask again for a while (saves quota)
 // - store (optional): api/cacheStore.js, the api_cache table, so answers
 //   survive a restart. Keys there get the name in front, e.g. "eskom:...".
+//   Before asking upstream we look in the table too: another server on the
+//   same database (your PC and Render on Neon) may have just fetched it,
+//   and sharing that answer saves quota (EskomSePush allows 50 calls a day).
 // weather.js has the same idea written out by hand.
 
 export class Unavailable extends Error {}
@@ -22,15 +25,19 @@ export function createCache({ staleMs, cooldownMs, maxKeys = 200, now = Date.now
     return entry;
   }
 
-  // After a restart memory is empty, so look in the table once per key.
-  const checked = new Set();
+  // Takes the table's answer when it is newer than ours (or we have none,
+  // e.g. after a restart).
   async function fromStore(key) {
-    if (!store || entries.has(key) || checked.has(key)) return;
-    if (checked.size > maxKeys * 5) checked.clear();
-    checked.add(key);
+    if (!store) return;
     const saved = await store.load(`${name}:${key}`);
-    if (saved && !entries.has(key)) remember(key, saved.value, saved.fetchedAt);
+    const hit = entries.get(key);
+    if (saved && (!hit || saved.fetchedAt > hit.fetchedAt)) remember(key, saved.value, saved.fetchedAt);
   }
+
+  const ageOf = (key) => {
+    const hit = entries.get(key);
+    return hit ? now() - hit.fetchedAt : Infinity;
+  };
 
   async function fetchAndKeep(key, load) {
     const entry = remember(key, await load());
@@ -40,9 +47,11 @@ export function createCache({ staleMs, cooldownMs, maxKeys = 200, now = Date.now
 
   // load() calls upstream and returns the value to keep.
   async function get(key, freshMs, load) {
-    await fromStore(key);
+    if (ageOf(key) < freshMs) return { ...entries.get(key), stale: false };
+    // Too old in memory: check the table before spending an upstream call.
+    if (!inFlight.has(key)) await fromStore(key);
     const hit = entries.get(key);
-    const age = hit ? now() - hit.fetchedAt : Infinity;
+    const age = ageOf(key);
     if (age < freshMs) return { ...hit, stale: false };
 
     const failed = failures.get(key);

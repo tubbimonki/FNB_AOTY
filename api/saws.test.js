@@ -94,6 +94,22 @@ describe('SAWS warnings', () => {
     expect(fetchImpl).toHaveBeenCalledWith('http://www.weathersa.co.za/Documents/Warnings/GP_CAP_DisruptiveRain_20261026_060000.xml', expect.anything());
   });
 
+  it('repairs the incomplete SAWS certificate chain, like a browser does', async () => {
+    const badChain = Object.assign(new TypeError('fetch failed'), { cause: { code: 'UNABLE_TO_VERIFY_LEAF_SIGNATURE' } });
+    const fetchImpl = vi.fn(async () => { throw badChain; });
+    const aiaGet = vi.fn(async (url) => { if (files[url]) return files[url]; throw new Error('404'); });
+    const saws = createSawsService({ fetchImpl, aiaGet, now: () => NOW });
+    const { warnings } = await saws.getWarnings(-26.1, 28.23);
+    expect(warnings.map((w) => w.title)).toEqual(['Orange Level 5 Warning: Disruptive Rain']);
+    expect(aiaGet).toHaveBeenCalledWith('https://caps.weathersa.co.za/Home/RssFeed');
+  });
+
+  it('says why SAWS could not be reached', async () => {
+    const fetchImpl = vi.fn(async () => { throw Object.assign(new TypeError('fetch failed'), { cause: { code: 'ENOTFOUND' } }); });
+    const saws = createSawsService({ fetchImpl, now: () => NOW });
+    await expect(saws.check()).rejects.toThrow(/fetch failed \(ENOTFOUND\)/);
+  });
+
   it('asks SAWS once per 30 minutes and opens each CAP file once', async () => {
     const fetchImpl = fakeFetch();
     let clock = NOW;

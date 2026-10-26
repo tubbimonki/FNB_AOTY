@@ -11,6 +11,7 @@
 // spot (CAP polygon) or their province (file name prefix).
 // CAP 1.2 spec: https://docs.oasis-open.org/emergency/cap/v1.2/CAP-v1.2-os.html
 import { createCache, Unavailable } from './cache.js';
+import { getWithAia, MISSING_CHAIN } from './aia.js';
 
 export const DEFAULT_SAWS_URL = 'https://caps.weathersa.co.za/Home/RssFeed';
 const FRESH_MS = 30 * 60 * 1000;
@@ -129,7 +130,7 @@ export function parseCap(xml) {
 }
 
 // cacheStore (optional) keeps the last feed read across restarts.
-export function createSawsService({ url = DEFAULT_SAWS_URL, fetchImpl = fetch, now = Date.now, cacheStore = null } = {}) {
+export function createSawsService({ url = DEFAULT_SAWS_URL, fetchImpl = fetch, aiaGet = getWithAia, now = Date.now, cacheStore = null } = {}) {
   const enabled = Boolean(url) && url !== 'off';
   const cache = createCache({ staleMs: STALE_MS, cooldownMs: COOLDOWN_MS, now, store: cacheStore, name: 'saws' });
   const capFiles = new Map(); // link -> parsed CAP (they never change), so each is fetched once
@@ -142,6 +143,15 @@ export function createSawsService({ url = DEFAULT_SAWS_URL, fetchImpl = fetch, n
         if (res.ok) return res.text();
         errors.push(`${attempt}: SAWS answered ${res.status}`);
       } catch (err) {
+        // SAWS sends an incomplete certificate chain, which browsers repair and Node doesn't.
+        if (MISSING_CHAIN.has(err.cause?.code) && attempt.startsWith('https:')) {
+          try {
+            return await aiaGet(attempt);
+          } catch (aiaErr) {
+            errors.push(`${attempt}: certificate chain incomplete, repair failed (${aiaErr.message})`);
+            continue;
+          }
+        }
         // Node only says "fetch failed"; the real reason (bad certificate, DNS, timeout) is in err.cause.
         const why = err.cause?.code || err.cause?.message;
         errors.push(`${attempt}: ${why ? `${err.message} (${why})` : err.message}`);

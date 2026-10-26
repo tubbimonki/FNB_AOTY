@@ -7,10 +7,11 @@ import Pill from '../../components/ui/Pill';
 import ListRow, { ListCard } from '../../components/ui/ListRow';
 import { loadJSON, saveJSON } from '../../services/storage';
 import { ALL_ITEMS, DROP_OFFS, MATERIALS } from './recyclingData';
-import { WEEKDAYS, nextCollection } from './collection';
+import { useWide } from '../../hooks/useWide';
+import RelatedGuides from '../guides/RelatedGuides';
+import { COLLECTION_KEY, WEEKDAYS, nextCollection } from './collection';
 
 const ICONS = { plastic: Package, glass: Wine, paper: Newspaper, metal: Package, ewaste: Cpu };
-const COLLECTION_KEY = 'recycling:weekday';
 
 const prettyDate = (date) => new Date(`${date}T12:00`).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' });
 
@@ -20,6 +21,7 @@ const RecyclingPage = () => {
   const [query, setQuery] = useState('');
   const [weekday, setWeekday] = useState(() => loadJSON(COLLECTION_KEY, 2));
   const material = MATERIALS.find((m) => m.id === materialId);
+  const wide = useWide();
 
   useEffect(() => {
     saveJSON(COLLECTION_KEY, weekday);
@@ -31,7 +33,7 @@ const RecyclingPage = () => {
   return (
     <>
       <AppBar title="Recycling & Waste Guide" back="/eco" />
-      <main className="page grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <main className="page grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_22rem_22rem]">
         <div className="space-y-5">
           <label className="relative block">
             <span className="sr-only">Search items</span>
@@ -114,6 +116,12 @@ const RecyclingPage = () => {
             <span><span className="block font-bold">Prepare for a national disaster</span><span className="text-sm text-forest-100">Emergency checklist and contacts</span></span>
           </Link>
         </div>
+
+        {wide && (
+          <aside aria-label="Recycling guides">
+            <RelatedGuides ids={['g3', 'g5']} title="Recycling guides" />
+          </aside>
+        )}
       </main>
     </>
   );

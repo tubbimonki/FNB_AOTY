@@ -47,6 +47,34 @@ describe('useSyncedList', () => {
     expect(vi.mocked(fetch).mock.calls.at(-1)).toEqual(['/api/wallet/logs/n', expect.objectContaining({ method: 'DELETE' })]);
   });
 
+  it('keeps a log deleted offline deleted, and sends the delete on the next load', async () => {
+    localStorage.setItem('logs:u1', JSON.stringify([log('gone', true), log('kept', true)]));
+    // First visit: offline, so the delete can't reach the API.
+    const first = renderHook(() => useSyncedList('logs', '/wallet/logs'), { wrapper: asUser(thandi) });
+    act(() => first.result.current[2]('gone'));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2)); // the load and the DELETE both failed
+    expect(JSON.parse(localStorage.getItem('logs:u1:deleted'))).toEqual(['gone']);
+    first.unmount();
+
+    // Next visit: the API is back but still has the log until the DELETE arrives.
+    mockApi({ 'DELETE /api/wallet/logs/gone': [204], 'GET /api/wallet/logs': [200, { logs: [log('kept')] }] });
+    const { result } = renderHook(() => useSyncedList('logs', '/wallet/logs'), { wrapper: asUser(thandi) });
+    await waitFor(() => expect(localStorage.getItem('logs:u1:deleted')).toBeNull());
+    await waitFor(() => expect(result.current[0]).toEqual([log('kept', true)]));
+    const calls = vi.mocked(fetch).mock.calls.map(([url, o]) => `${o?.method ?? 'GET'} ${url}`);
+    expect(calls.indexOf('DELETE /api/wallet/logs/gone')).toBeLessThan(calls.indexOf('GET /api/wallet/logs'));
+  });
+
+  it("hides a log the server still has while its delete keeps failing", async () => {
+    localStorage.setItem('logs:u1', JSON.stringify([log('kept', true)]));
+    localStorage.setItem('logs:u1:deleted', JSON.stringify(['gone']));
+    mockApi({ 'DELETE /api/wallet/logs/gone': [500, { error: 'Something went wrong' }], 'GET /api/wallet/logs': [200, { logs: [log('gone'), log('kept')] }] });
+    const { result } = renderHook(() => useSyncedList('logs', '/wallet/logs'), { wrapper: asUser(thandi) });
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(result.current[0]).toEqual([log('kept', true)]));
+    expect(JSON.parse(localStorage.getItem('logs:u1:deleted'))).toEqual(['gone']);
+  });
+
   it('keeps a log added while the first load was still on its way', async () => {
     let answer;
     vi.mocked(fetch).mockImplementation((url, options = {}) => {
@@ -89,6 +117,16 @@ describe('useSyncedValue', () => {
     const { result } = renderHook(() => useSyncedValue('ticks', '/alerts/checklist', []), { wrapper: asUser(thandi) });
     await waitFor(() => expect(lastBodySentTo('/api/alerts/checklist')).toEqual({ value: ['water'] }));
     expect(result.current[0]).toEqual(['water']);
+  });
+
+  it('says the value is pending until the API has it', async () => {
+    mockApi({ 'GET /api/alerts/checklist': [200, { value: [] }], 'PUT /api/alerts/checklist': [200, { value: ['kit'] }] });
+    const { result } = renderHook(() => useSyncedValue('ticks', '/alerts/checklist', []), { wrapper: asUser(thandi) });
+    expect(result.current[2]).toBe(false);
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
+    act(() => result.current[1](['kit']));
+    expect(result.current[2]).toBe(true);
+    await waitFor(() => expect(result.current[2]).toBe(false));
   });
 
   it('saves changes with PUT', async () => {
