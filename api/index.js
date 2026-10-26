@@ -125,7 +125,7 @@ if (saws.enabled) {
 const news = process.env.NEWS_FEEDS === 'off' ? null : createNewsService();
 
 // Made here (not inside createApp) so the warm-up below fills the same caches the routes use.
-const weather = createWeatherService();
+const weather = createWeatherService({ store: cacheStore, log: console.log });
 const airQuality = createAirQualityService();
 
 const server = createApp({ db, reactionsDb, jwtSecret: JWT_SECRET, cacheStore, trustProxy, staticDir, featuresOff, weather, airQuality, eskom, facilities, saws, news }).listen(PORT, () => {
