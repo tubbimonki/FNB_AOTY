@@ -27,6 +27,12 @@ describe('Navigation', () => {
     expect(tabBar().getAllByRole('link').filter((a) => a.getAttribute('aria-current'))).toHaveLength(1);
   });
 
+  it('gives each tab its own nature colour and the page the current tab colour', () => {
+    const { container } = renderWithProviders(<App />, { route: '/eco', user: { id: 1, name: 'Thandi' } });
+    expect(tabBar().getAllByRole('link').map((a) => a.dataset.accent)).toEqual(['sun', 'lagoon', 'leaf', 'heather', 'sky']);
+    expect(container.firstChild).toHaveAttribute('data-accent', 'leaf');
+  });
+
   it('hides the tab bar on the splash and login screens', () => {
     renderWithProviders(<App />, { route: '/home' });
     expect(screen.queryByRole('navigation', { name: 'Tabs' })).not.toBeInTheDocument();

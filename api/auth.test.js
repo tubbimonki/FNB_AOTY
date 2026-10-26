@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { signToken } from './auth/tokens.js';
 import { createClient, startTestServer, TEST_SECRET } from './test/startTestServer.js';
+import { users } from './schema.js';
 
 const tubbi = { name: 'tubbi', email: 'tubbi@example.com', password: 'correct horse battery' };
 
@@ -28,10 +29,10 @@ describe('POST /api/auth/register', () => {
 
   it('stores a bcrypt hash, not the password', async () => {
     await client.request('POST', '/api/auth/register', tubbi);
-    const row = api.db.prepare('SELECT password_hash FROM users').get();
+    const [row] = await api.db.select().from(users);
 
-    expect(row.password_hash).not.toContain(tubbi.password);
-    expect(row.password_hash).toMatch(/^\$2[aby]\$\d\d\$/);
+    expect(row.passwordHash).not.toContain(tubbi.password);
+    expect(row.passwordHash).toMatch(/^\$2[aby]\$\d\d\$/);
   });
 
   it('treats emails case-insensitively', async () => {

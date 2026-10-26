@@ -52,3 +52,6 @@ export const pageImages = {
   ecoHero: images.forestLight,
   waterHero: images.valley,
 };
+
+// Event photos: each event names a key above (temporary photos until events have their own).
+export const eventImage = (key) => images[key] ?? images.field;

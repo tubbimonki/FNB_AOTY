@@ -11,6 +11,7 @@ import { createAirQualityService } from './airQuality.js';
 import { createSawsService } from './saws.js';
 import { mountModules } from './modules/index.js';
 import { createCacheStore } from './cacheStore.js';
+import { createBus } from './bus.js';
 import { newsRouter } from './routes/news.js';
 import { createNewsService } from './news.js';
 
@@ -25,6 +26,8 @@ import { createNewsService } from './news.js';
 // airQuality and saws: extra alert sources for /api/alerts.
 // news: climate stories from RSS feeds (null = bundled snapshot only).
 // cacheStore: the api_cache table, so module caches survive a restart.
+// now: the clock, so tests can pretend it's another day.
+// reactionsDb: a separate database for event reactions (defaults to db).
 export function createApp({
   db,
   jwtSecret,
@@ -38,6 +41,8 @@ export function createApp({
   trustProxy = 0,
   staticDir,
   featuresOff = [],
+  now,
+  reactionsDb = db,
 }) {
   if (!db) throw new Error('createApp needs a db');
   if (!jwtSecret) throw new Error('createApp needs a jwtSecret');
@@ -54,7 +59,9 @@ export function createApp({
   app.use('/api/auth', authRouter({ db, jwtSecret }));
   app.use('/api/weather', weatherRouter({ weather }));
   app.use('/api/news', newsRouter({ news }));
-  mountModules(app, { db, jwtSecret, cacheStore, weather, eskom, facilities, airQuality, saws }, featuresOff);
+  // One bus per app: modules announce things on it (see api/bus.js).
+  const bus = createBus();
+  mountModules(app, { db, reactionsDb, jwtSecret, bus, now, cacheStore, weather, eskom, facilities, airQuality, saws }, featuresOff);
   app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 
   // Production: serve the site from the same origin as the API, so the

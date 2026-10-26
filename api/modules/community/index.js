@@ -2,10 +2,11 @@ import { Router } from 'express';
 import { count, desc, eq, isNotNull } from 'drizzle-orm';
 import { requireAuth } from '../../middleware/requireAuth.js';
 import { validateReport } from '../../../shared/reports.js';
-import { SAMPLE_EVENTS, SAMPLE_PINS, SAMPLE_UPDATES } from './sampleData.js';
+import { SAMPLE_PINS, SAMPLE_UPDATES } from './sampleData.js';
 import { reports } from './schema.js';
 
-// Map pins, local updates, events, and residents' reports (reports table).
+// Map pins, local updates and residents' reports (reports table).
+// Community events have their own module (api/modules/events).
 // TODO(events): emit 'report.created' so impact can award points (guide 2).
 // TODO(moderation): new reports should show as unverified until checked.
 const MAX_PER_USER = 20;
@@ -37,9 +38,9 @@ export default {
       res.json({ pins: [...SAMPLE_PINS, ...reportPins], sample: true });
     });
 
-    // GET /api/community/updates -> { updates, events, sample }
+    // GET /api/community/updates -> { updates, sample }
     router.get('/updates', (req, res) => {
-      res.json({ updates: SAMPLE_UPDATES, events: SAMPLE_EVENTS, sample: true });
+      res.json({ updates: SAMPLE_UPDATES, sample: true });
     });
 
     // POST /api/community/reports { category, description, lat?, lon? } -> 201 { report }

@@ -1,0 +1,76 @@
+<!-- First 6 items of the real SAWS feed (Public Domain), copied 26 Oct 2026. -->
+<rss xmlns:a10="http://www.w3.org/2005/Atom" version="2.0">
+  <channel>
+    <title>Latest alerts from South Africa Weather Service</title>
+    <link>http://caps.weathersa.co.za/Home/RssFeed</link>
+    <description>Welcome to the South African Weather Service RSS Feed for Weather Warning Alerts</description>
+    <language>en</language>
+    <copyright>Public Domain</copyright>
+    <lastBuildDate>Mon, 26 Oct 2026 00:00:00 +0200</lastBuildDate>
+    <item>
+      <guid isPermaLink="true">http://www.weathersa.co.za/Documents/Warnings/FS_CAP_DamagingWinds_20261021_080713.xml</guid>
+      <link>http://www.weathersa.co.za/Documents/Warnings/FS_CAP_DamagingWinds_20261021_080713.xml</link>
+      <title> Damaging Winds</title>
+      <description>Localised damage to settlements (formal and informal) 
+Localised loss of agricultural production
+Some transport routes and travel services affected by wind, falling trees or dust storms
+
+</description>
+      <pubDate>Wed, 21 Oct 2026 08:04:48 +0200</pubDate>
+    </item>
+    <item>
+      <guid isPermaLink="true">http://www.weathersa.co.za/Documents/Warnings/GP_CAP_DamagingWinds_20261019_095710.xml</guid>
+      <link>http://www.weathersa.co.za/Documents/Warnings/GP_CAP_DamagingWinds_20261019_095710.xml</link>
+      <title> Damaging Winds</title>
+      <description>Localised damage to settlements (formal and informal)
+Localised problems for high-sided vehicles on prone routes e.g. due to cross winds on exposed high level roads/bridges
+Some transport routes and travel services affected by wind, dust storms
+Risk of localised runaway fires</description>
+      <pubDate>Mon, 19 Oct 2026 09:56:48 +0200</pubDate>
+    </item>
+    <item>
+      <guid isPermaLink="true">http://www.weathersa.co.za/Documents/Warnings/KZN_CAP_DamagingWaves_20261019_092246.xml</guid>
+      <link>http://www.weathersa.co.za/Documents/Warnings/KZN_CAP_DamagingWaves_20261019_092246.xml</link>
+      <title> Damaging Waves</title>
+      <description>-Localised disruption of small harbours and/or ports for a short period of time.
+-Difficulty in navigation.
+-Small vessels at risk of taking on water and capsizing in a locality.
+-Localised disruptions to beachfront activities.</description>
+      <pubDate>Mon, 19 Oct 2026 09:21:49 +0200</pubDate>
+    </item>
+    <item>
+      <guid isPermaLink="true">http://www.weathersa.co.za/Documents/Warnings/KZN_CAP_DamagingWaves_20261019_092246.xml</guid>
+      <link>http://www.weathersa.co.za/Documents/Warnings/KZN_CAP_DamagingWaves_20261019_092246.xml</link>
+      <title> Damaging Waves</title>
+      <description>-Localised disruption of small harbours and/or ports for a short period of time.
+-Difficulty in navigation.
+-Small vessels at risk of taking on water and capsizing in a locality.
+-Localised disruptions to beachfront activities.</description>
+      <pubDate>Mon, 19 Oct 2026 09:21:49 +0200</pubDate>
+    </item>
+    <item>
+      <guid isPermaLink="true">http://www.weathersa.co.za/Documents/Warnings/KZN_CAP_DamagingWinds_20261019_091747.xml</guid>
+      <link>http://www.weathersa.co.za/Documents/Warnings/KZN_CAP_DamagingWinds_20261019_091747.xml</link>
+      <title> Damaging Winds</title>
+      <description>- Localised disruption of small harbours and/or a port for a short period of time
+- Difficulty in navigation (eg. Hampered progress due to strong winds)
+- Small vessels at risk of taking on water and capsizing in a locality.
+- Localised disruptions to beachfront activities.
+- Localised damage to settlements (formal and informal).
+- Localised problems for high-sided vehicles on prone routes.</description>
+      <pubDate>Mon, 19 Oct 2026 09:15:49 +0200</pubDate>
+    </item>
+    <item>
+      <guid isPermaLink="true">http://www.weathersa.co.za/Documents/Warnings/KZN_CAP_DamagingWinds_20261019_091747.xml</guid>
+      <link>http://www.weathersa.co.za/Documents/Warnings/KZN_CAP_DamagingWinds_20261019_091747.xml</link>
+      <title> Damaging Winds</title>
+      <description>- Localised disruption of small harbours and/or a port for a short period of time
+- Difficulty in navigation (eg. Hampered progress due to strong winds)
+- Small vessels at risk of taking on water and capsizing in a locality.
+- Localised disruptions to beachfront activities.
+- Localised damage to settlements (formal and informal).
+- Localised problems for high-sided vehicles on prone routes.</description>
+      <pubDate>Mon, 19 Oct 2026 09:15:49 +0200</pubDate>
+    </item>
+  </channel>
+</rss>

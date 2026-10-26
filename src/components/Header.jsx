@@ -27,14 +27,16 @@ const Header = ({ navigation }) => {
               const Icon = item.icon;
               return (
                 <li key={item.link}>
+                  {/* The icon takes the tab's own colour (light shade on the dark bar). */}
                   <Link
                     to={item.link}
+                    data-accent={item.accent}
                     aria-current={active ? 'page' : undefined}
-                    className={`flex items-center gap-2 rounded-full px-3.5 py-2 text-sm no-underline transition-colors hover:bg-white/10 hover:no-underline ${
+                    className={`flex items-center gap-2 rounded-full px-3.5 py-2 text-sm no-underline transition-colors duration-(--motion-base) hover:bg-white/10 hover:no-underline ${
                       active ? 'bg-white/15 font-semibold text-white' : 'text-forest-100'
                     }`}
                   >
-                    <Icon className="size-4" aria-hidden="true" />
+                    <Icon className={`size-4 transition-colors duration-(--motion-base) ${active ? 'text-(--accent-glow)' : ''}`} aria-hidden="true" />
                     {item.label}
                   </Link>
                 </li>

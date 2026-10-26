@@ -13,6 +13,7 @@ import AlertsPage from './features/alerts/AlertsPage';
 import MapPage from './features/community/MapPage';
 import CommunityPage from './features/community/CommunityPage';
 import ReportPage from './features/community/ReportPage';
+import EventPage from './features/community/EventPage';
 import ServicesPage from './features/services/ServicesPage';
 import EcoPage from './features/eco/EcoPage';
 import FootprintPage from './features/eco/FootprintPage';
@@ -55,7 +56,12 @@ function App() {
         {/* Public tools: they work without an account. */}
         <Route path="/alerts" element={<AlertsPage />} />
         <Route path="/map" element={<MapPage />} />
-        <Route path="/community" element={<CommunityPage />} />
+        {/* Nested: the tab, one event's page, and the report form (needs an account). */}
+        <Route path="/community">
+          <Route index element={<CommunityPage />} />
+          <Route path="events/:eventId" element={<EventPage />} />
+          <Route path="report" element={<RequireAuth><ReportPage /></RequireAuth>} />
+        </Route>
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/eco" element={<EcoPage />} />
         <Route path="/eco/footprint" element={<FootprintPage />} />
@@ -64,8 +70,7 @@ function App() {
         <Route path="/tracker" element={<TrackerPage />} />
         <Route path="/more" element={<More />} />
 
-        {/* Need an account: the API stores reports per user. */}
-        <Route path="/community/report" element={<RequireAuth><ReportPage /></RequireAuth>} />
+        {/* Needs an account: points are worked out per user. */}
         <Route path="/impact" element={<RequireAuth><ImpactPage /></RequireAuth>} />
 
         <Route path="/login" element={<LoginPage />} />

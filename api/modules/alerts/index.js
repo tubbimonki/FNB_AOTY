@@ -22,6 +22,10 @@ import { checklistTicks } from './schema.js';
 const RANK = { severe: 0, warning: 1, info: 2 };
 const bySeverity = (a, b) => (RANK[a.severity] ?? 3) - (RANK[b.severity] ?? 3);
 
+// expiry time -> "Until Mon 18:00" in SA time, or undefined.
+const until = (ms) =>
+  ms ? `Until ${new Intl.DateTimeFormat('en-ZA', { weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Africa/Johannesburg' }).format(new Date(ms)).replace(',', '')}` : undefined;
+
 // Runs one source. -> { status: 'live' | 'stale' | 'off' | 'unavailable', alerts }
 async function fromSource(name, load) {
   try {
@@ -92,6 +96,16 @@ export default {
 
     // GET /api/alerts?lat=-26.2&lon=28.05&place=Johannesburg
     // -> { alerts, sources: { weather, power, air, saws }, sample }
+    // GET /api/alerts/saws -> what the SAWS feed looked like on the last read, to check it works.
+    router.get('/saws', async (req, res) => {
+      if (!saws?.enabled) return res.json({ enabled: false });
+      try {
+        res.json({ enabled: true, ...(await saws.check()) });
+      } catch (err) {
+        res.status(503).json({ enabled: true, error: err.message });
+      }
+    });
+
     router.get('/', async (req, res) => {
       const lat = Number(req.query.lat);
       const lon = Number(req.query.lon);
@@ -125,7 +139,7 @@ export default {
             stale: s.stale,
             alerts: s.warnings.map((w, i) => ({
               id: `saws-${i}`, severity: w.severity, icon: '📢', title: w.title, body: w.body,
-              where: s.province, source: 'SA Weather Service', href: w.link,
+              where: s.province, source: 'SA Weather Service', href: w.link, when: until(w.expires),
             })),
           };
         }),

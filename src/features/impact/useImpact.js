@@ -6,6 +6,7 @@ import { useWaterLogs } from '../water/useWaterLogs';
 import { daysUnderGoal } from '../water/water';
 import { useChecklist } from '../alerts/useChecklist';
 import { useFootprint } from '../eco/useFootprint';
+import { useAwards } from './useAwards';
 
 // Gathers everything the user did (Postgres when logged in, see useSynced) and
 // runs it through the shared points maths. GET /api/impact/me does the
@@ -15,6 +16,8 @@ export function useImpact() {
   const water = useWaterLogs();
   const checklist = useChecklist();
   const { saved: footprint } = useFootprint();
+  const { awards, premiumUntil } = useAwards(); // event rewards, from the server
+  const awardPoints = awards.reduce((sum, a) => sum + a.points, 0);
 
   // Each log with its action, skipping logs whose action was removed.
   const actionLogs = logs
@@ -27,18 +30,20 @@ export function useImpact() {
     waterDaysUnderGoal: daysUnderGoal(water.logs),
     checklistDone: checklist.doneCount === checklist.total,
     footprintDone: Boolean(footprint),
+    bonusPoints: awardPoints,
   });
 
   // This week's points, which make the plant grow.
   const week = new Set(lastDays(7));
   const weekPoints =
     actionLogs.filter((log) => week.has(log.date)).length * POINTS.action +
-    daysUnderGoal(water.logs.filter((log) => week.has(log.date))) * POINTS.waterDay;
+    daysUnderGoal(water.logs.filter((log) => week.has(log.date))) * POINTS.waterDay +
+    awards.filter((a) => week.has(a.createdAt.slice(0, 10))).reduce((sum, a) => sum + a.points, 0);
 
   // Days since the last Green Wallet log (null if never), for a wilting plant.
   const lastDate = actionLogs.map((log) => log.date).sort().at(-1);
   const recent = new Set(lastDays(3));
   const wilting = Boolean(lastDate) && !recent.has(lastDate);
 
-  return { ...impact, actionLogs, weekPoints, wilting, footprint, waterLogs: water.logs };
+  return { ...impact, actionLogs, weekPoints, wilting, footprint, waterLogs: water.logs, awards, premiumUntil };
 }
