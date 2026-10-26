@@ -1,8 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Sprout } from 'lucide-react';
 import { useAuth } from '../features/auth/useAuth';
 import { isActive } from '../navItems';
 import { APP_NAME } from '../brand';
+import EcoMark from './ui/EcoMark';
 
 // Desktop header (lg and up): logo, the five tabs and the account button.
 // On phones it is hidden; BottomNav and each page's AppBar take over.
@@ -15,7 +15,7 @@ const Header = ({ navigation }) => {
       <div className="wrap flex items-center justify-between gap-4 px-6 py-2.5">
         <Link to="/home" className="flex items-center gap-2 text-lg font-bold text-white no-underline hover:no-underline">
           <span className="grid size-8 place-items-center rounded-full bg-sprout/20 text-sprout" aria-hidden="true">
-            <Sprout className="size-5" />
+            <EcoMark className="size-5" />
           </span>
           {APP_NAME}
         </Link>

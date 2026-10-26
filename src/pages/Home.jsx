@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, CloudSun, HandHeart, Leaf, Map, Recycle, Sprout, Trees, Users, Wind, Zap, ArrowRight } from 'lucide-react';
+import { ChevronDown, CloudSun, HandHeart, Leaf, Map, Recycle, Trees, Users, Wind, Zap, ArrowRight } from 'lucide-react';
 import NewsSection from '../components/NewsSection';
 import GuidesSection from '../components/GuidesSection';
 import Photo from '../components/Photo';
@@ -15,6 +15,7 @@ import { useCountUp } from '../hooks/useCountUp';
 import { prefersReducedMotion } from '../hooks/motion';
 import { APP_NAME, MISSION, TAGLINE } from '../brand';
 import { featureList } from '../featureList';
+import EcoMark from '../components/ui/EcoMark';
 
 // The splash screen from the mockup, then the public landing sections.
 // The header logo always comes back here.
@@ -81,7 +82,7 @@ const Home = () => {
         <DriftingLeaves className="-z-10" />
 
         <span className="rise group mb-6 grid size-28 place-items-center rounded-full border-[6px] border-sprout/70 bg-forest-950/60 text-sprout shadow-2xl backdrop-blur-sm logo-glow" style={{ '--i': 0 }} aria-hidden="true">
-          <Sprout className="sprout-sway size-14" strokeWidth={1.5} />
+          <EcoMark className="sprout-sway size-14" />
         </span>
         <h1 className="rise mb-2 text-4xl text-sprout sm:text-5xl" style={{ '--i': 1 }}>{APP_NAME}</h1>
         <p className="rise font-semibold text-sprout" style={{ '--i': 2 }}>{TAGLINE}</p>

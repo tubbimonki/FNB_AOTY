@@ -1,5 +1,5 @@
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { BookOpen, CloudRain, Crown, Droplet, Leaf, Map as MapIcon, Newspaper, Sprout, Wallet } from 'lucide-react';
+import { BookOpen, CloudRain, Crown, Droplet, Leaf, Map as MapIcon, Newspaper, Wallet } from 'lucide-react';
 import { useAuth } from '../auth/useAuth';
 import { useNews } from '../news/useNews';
 import { guideItems, latestGuides } from '../guides/guideItems';
@@ -21,6 +21,7 @@ import { pageImages } from '../../assets/images';
 import { APP_NAME } from '../../brand';
 import MiniWidget from './MiniWidget';
 import { greeting } from './greeting';
+import EcoMark from '../../components/ui/EcoMark';
 
 // Photo header: app name, the notification bell, the greeting (with Premium
 // when it's running) and today's weather.
@@ -38,7 +39,7 @@ const Hero = ({ name, place, weather, status, alerts, premiumUntil }) => {
 
       <div className="px-5 pt-5 pb-6 sm:px-8 sm:pt-7 sm:pb-8">
         <div className="mb-8 flex items-center justify-between">
-          <p className="flex items-center gap-2 font-semibold"><Sprout className="size-5 text-sprout" aria-hidden="true" />{APP_NAME}</p>
+          <p className="flex items-center gap-2 font-semibold"><EcoMark className="size-5 text-sprout" />{APP_NAME}</p>
           <NotificationBell alerts={alerts} place={place.name} />
         </div>
 
